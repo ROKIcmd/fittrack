@@ -1,0 +1,13 @@
+# IntelliJ / Mac / Windows
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Backend (Maven)
+backend/target/
+
+# Frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
