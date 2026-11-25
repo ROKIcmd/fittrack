@@ -3,6 +3,8 @@ import Login from "./pages/Login.jsx";
 import MemberSignup from "./pages/MemberSignup/MemberSignup.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import WorkoutLogPage from "./pages/Member/WorkoutLogPage.jsx";
+import MemberDashboard from "./pages/MemberDash.jsx";
+
 
 const Placeholder = ({ title }) => (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -32,7 +34,7 @@ export default function App() {
                 <Route path="/member/profile" element={<Placeholder title="Member Profile" />} />
 
                 {/* FE 2: Member Workspace */}
-                <Route path="/member/dashboard" element={<Placeholder title="Member Dashboard" />} />
+                <Route path="/member/dashboard" element={<MemberDashboard/>} />
                 <Route path="/member/membership" element={<Placeholder title="Member Membership" />} />
                 <Route path="/member/workout-plan" element={<Placeholder title="Workout Plan" />} />
                 <Route path="/member/workout-log" element={<WorkoutLogPage />} />
