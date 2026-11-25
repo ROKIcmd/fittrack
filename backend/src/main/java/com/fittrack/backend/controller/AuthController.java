@@ -1,4 +1,5 @@
 package com.fittrack.backend.controller;
+import com.fittrack.backend.model.Trainer;
 
 import com.fittrack.backend.model.Member;
 import com.fittrack.backend.model.User;
@@ -46,5 +47,36 @@ public class AuthController {
 
     private AuthResponse toResponse(User u) {
         return new AuthResponse(u.getId(), u.getFullName(), u.getEmail(), u.getRole());
+    }
+
+    // delete for build
+    @PostMapping("/dev/create-trainer")
+    public ResponseEntity<?> createTestTrainer() {
+
+        var users = DataStore.getInstance().users();
+
+        String email = "trainer.test@fittrack.com";
+
+        if (users.findByEmail(email).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "Test trainer already exists"));
+        }
+
+        Trainer trainer = new Trainer(
+                "T-TEST-001",
+                "Alex",
+                "Morgan",
+                email,
+                "TrainerTest123",
+                "Bachelor of Science in Sports Science",
+                "Strength Training",
+                5,
+                "Helping members build strength and confidence."
+        );
+
+        users.save(trainer);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(toResponse(trainer));
     }
 }
