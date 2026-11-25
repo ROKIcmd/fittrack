@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { AnimationStyles } from "../Styles/Animations"
-function Signup() {
+function Login() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
@@ -240,4 +240,4 @@ function Signup() {
         </>
     )
 }
-export default Signup
+export default Login
