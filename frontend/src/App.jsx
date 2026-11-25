@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import MemberSignup from "./pages/MemberSignup/MemberSignup.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
+import WorkoutLogPage from "./pages/Member/WorkoutLogPage.jsx";
 import MemberDashboard from "./pages/MemberDash.jsx";
 
 
@@ -23,7 +25,8 @@ export default function App() {
         <BrowserRouter>
             <Routes>
                 {/* FE 1: Public & Auth */}
-                <Route path="/" element={<Placeholder title="Landing Page" />} />
+
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={< Login/>} />
                 <Route path="/register" element={<MemberSignup />} />
                 <Route path="/register/details" element={<Placeholder title="Register Step 2" />} />
@@ -34,7 +37,7 @@ export default function App() {
                 <Route path="/member/dashboard" element={<MemberDashboard/>} />
                 <Route path="/member/membership" element={<Placeholder title="Member Membership" />} />
                 <Route path="/member/workout-plan" element={<Placeholder title="Workout Plan" />} />
-                <Route path="/member/workout-log" element={<Placeholder title="Workout Log" />} />
+                <Route path="/member/workout-log" element={<WorkoutLogPage />} />
                 <Route path="/member/trainer" element={<Placeholder title="My Trainer" />} />
                 <Route path="/member/progress" element={<Placeholder title="Member Progress" />} />
 
