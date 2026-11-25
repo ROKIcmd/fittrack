@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const Placeholder = ({ title }) => (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -30,7 +31,14 @@ export default function App() {
                     <Route path="/member/profile" element={<Placeholder title="Member Profile" />} />
 
                     {/* FE 2: Member Workspace */}
-                    <Route path="/member/dashboard" element={<Placeholder title="Member Dashboard" />} />
+                    <Route
+                        path="/member/dashboard"
+                        element={
+                            <ProtectedRoute allowedRole="MEMBER">
+                                <Placeholder title="Member Dashboard" />
+                            </ProtectedRoute>
+                        }
+                    />
                     <Route path="/member/membership" element={<Placeholder title="Member Membership" />} />
                     <Route path="/member/workout-plan" element={<Placeholder title="Workout Plan" />} />
                     <Route path="/member/workout-log" element={<Placeholder title="Workout Log" />} />
@@ -38,7 +46,14 @@ export default function App() {
                     <Route path="/member/progress" element={<Placeholder title="Member Progress" />} />
 
                     {/* FE 3: Trainer Workspace */}
-                    <Route path="/trainer/dashboard" element={<Placeholder title="Trainer Dashboard" />} />
+                    <Route
+                        path="/trainer/dashboard"
+                        element={
+                            <ProtectedRoute allowedRole="TRAINER">
+                                <Placeholder title="Trainer Dashboard" />
+                            </ProtectedRoute>
+                        }
+                    />
                     <Route path="/trainer/workout-plans" element={<Placeholder title="Trainer Workout Plans" />} />
                     <Route path="/trainer/diet-plans" element={<Placeholder title="Trainer Diet Plans" />} />
                     <Route path="/trainer/rescheduling" element={<Placeholder title="Rescheduling Requests" />} />
