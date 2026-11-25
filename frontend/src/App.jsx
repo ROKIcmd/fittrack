@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-
+import MemberSignup from "./pages/MemberSignup/MemberSignup";
 const Placeholder = ({ title }) => (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <h1 className="text-3xl font-bold text-blue-500">{title}</h1>
@@ -21,7 +21,7 @@ export default function App() {
                 {/* FE 1: Public & Auth */}
                 <Route path="/" element={<Placeholder title="Landing Page" />} />
                 <Route path="/login" element={<Placeholder title="Login (Member / Trainer)" />} />
-                <Route path="/register" element={<Placeholder title="Register Step 1" />} />
+                <Route path="/register" element={<MemberSignup />} />
                 <Route path="/register/details" element={<Placeholder title="Register Step 2" />} />
                 <Route path="/payment" element={<Placeholder title="Membership Payment" />} />
                 <Route path="/member/profile" element={<Placeholder title="Member Profile" />} />
