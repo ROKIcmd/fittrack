@@ -1,6 +1,13 @@
 import { useState } from "react"
 import { AnimationStyles } from "../Styles/Animations"
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
+
 function Login() {
+    const navigate = useNavigate();
+    const { login } = useAuth();
+
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
@@ -18,6 +25,7 @@ function Login() {
             setShakeKey((k) => k + 1)
             return
         }
+
         if (password.length < 6) {
             setError("Password must be at least 6 characters.")
             setShakeKey((k) => k + 1)
@@ -25,10 +33,29 @@ function Login() {
         }
 
         setLoading(true)
+
         try {
-            // TODO: replace with your real auth call
-            await new Promise((r) => setTimeout(r, 1200))
-            console.log({ role, email, password })
+            const user = await loginUser({
+                email,
+                password,
+                role
+            })
+
+            login(user);
+
+            // Redirect based on the role returned by the backend.
+            if (user.role.toLowerCase() === "member") {
+                navigate("/member/dashboard")
+            } else if (user.role.toLowerCase() === "trainer") {
+                navigate("/trainer/dashboard")
+            } else {
+                setError("Unrecognized user role.")
+                setShakeKey((k) => k + 1)
+            }
+
+        } catch (err) {
+            setError(err.message || "Login failed. Please try again.")
+            setShakeKey((k) => k + 1)
         } finally {
             setLoading(false)
         }
