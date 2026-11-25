@@ -1,84 +1,5 @@
 import { useState } from "react"
-
-const styles = `
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-@keyframes slideInLeft {
-    from { opacity: 0; transform: translateX(-40px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes slideInRight {
-    from { opacity: 0; transform: translateX(40px) scale(0.97); }
-    to   { opacity: 1; transform: translateX(0) scale(1); }
-}
-@keyframes kenBurns {
-    from { transform: scale(1); }
-    to   { transform: scale(1.08); }
-}
-@keyframes floatY {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-6px); }
-}
-@keyframes glowPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.45); }
-    50%      { box-shadow: 0 0 0 10px rgba(59,130,246,0); }
-}
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-6px); }
-    40%, 80% { transform: translateX(6px); }
-}
-
-.anim-bg        { animation: kenBurns 24s ease-in-out infinite alternate; }
-.anim-left      { animation: slideInLeft 0.8s cubic-bezier(.22,1,.36,1) both; }
-.anim-card      { animation: slideInRight 0.9s cubic-bezier(.22,1,.36,1) 0.15s both; }
-.anim-up        { animation: fadeUp 0.7s cubic-bezier(.22,1,.36,1) both; }
-.anim-float     { animation: floatY 4s ease-in-out infinite; }
-.anim-glow      { animation: glowPulse 2.4s ease-out infinite; }
-.anim-spin      { animation: spin 0.8s linear infinite; }
-.anim-shake     { animation: shake 0.4s ease; }
-.anim-fade      { animation: fadeIn 0.3s ease both; }
-
-.delay-1 { animation-delay: 0.30s; }
-.delay-2 { animation-delay: 0.40s; }
-.delay-3 { animation-delay: 0.50s; }
-.delay-4 { animation-delay: 0.60s; }
-.delay-5 { animation-delay: 0.70s; }
-.delay-6 { animation-delay: 0.80s; }
-
-.btn-shine { position: relative; overflow: hidden; }
-.btn-shine::after {
-    content: "";
-    position: absolute;
-    top: 0; left: -75%;
-    width: 50%; height: 100%;
-    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
-    transform: skewX(-20deg);
-    transition: left 0.6s ease;
-}
-.btn-shine:hover::after { left: 130%; }
-
-.link-underline {
-    background: linear-gradient(currentColor, currentColor) 0 100% / 0% 1px no-repeat;
-    transition: background-size 0.3s ease;
-}
-.link-underline:hover { background-size: 100% 1px; }
-
-@media (prefers-reduced-motion: reduce) {
-    .anim-bg, .anim-left, .anim-card, .anim-up, .anim-float,
-    .anim-glow, .anim-shake, .anim-fade { animation: none !important; }
-}
-`
-
+import { AnimationStyles } from "../Styles/Animations"
 function Signup() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -131,16 +52,16 @@ function Signup() {
 
     return (
         <>
-            <style>{styles}</style>
+            <AnimationStyles />
 
             <div className="relative min-h-screen w-full overflow-hidden bg-black">
                 {/* Background photo with slow zoom */}
                 <img
-                    src="/images/gym-bg.png"
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRETb9eNmVn_d0m2uCvtrp1yfKuUp98a3JhrrZURbQSvQ&s=10"
                     alt=""
-                    className="anim-bg pointer-events-none absolute inset-0 h-full w-full object-cover opacity-50"
+                    className="anim-bg pointer-events-none absolute inset-0 h-full w-full object-cover opacity-80"
                 />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0f172a]/50 via-[#111827]/70 to-black" />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0f172a]/30 via-[#111827]/40 to-black/60" />
                 <div className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-[#3b82f6]/10 blur-3xl" />
 
                 <div className="relative z-10 mx-auto flex min-h-screen max-w-[1366px] flex-col items-center justify-center gap-12 px-6 py-10 lg:flex-row lg:justify-between lg:gap-0 lg:px-16">
