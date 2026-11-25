@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import MemberDashboard from "./pages/MemberDash.jsx";
 import MemberSignup from "./pages/MemberSignup/MemberSignup.jsx";
+
 const Placeholder = ({ title }) => (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <h1 className="text-3xl font-bold text-blue-500">{title}</h1>
