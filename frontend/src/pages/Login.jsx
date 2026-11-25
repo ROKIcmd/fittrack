@@ -2,9 +2,11 @@ import { useState } from "react"
 import { AnimationStyles } from "../Styles/Animations"
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -38,6 +40,8 @@ function Login() {
                 password,
                 role
             })
+
+            login(user);
 
             // Redirect based on the role returned by the backend.
             if (user.role.toLowerCase() === "member") {
