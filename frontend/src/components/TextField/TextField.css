@@ -1,0 +1,281 @@
+/* ==========================================================================
+   TextField – reusable animated input
+   Customise with CSS variables on the element or any ancestor:
+   --tf-height, --tf-radius, --tf-bg, --tf-font-size, --tf-gap
+   Figma defaults: 64px tall, 30px radius, #f1f5f9, 24px Goudy Old Style.
+   ========================================================================== */
+
+.tf {
+  width: 100%;
+}
+
+.tf__label {
+  display: block;
+  margin: 0 0 8px 18px;
+  font: 18px/1.2 var(--font-body);
+  color: var(--color-text-on-dark);
+}
+
+/* ---- Field shell ------------------------------------------------------- */
+
+.tf__field {
+  --tf-ring: transparent;
+  --tf-glow: transparent;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--tf-gap, 14px);
+  height: var(--tf-height, 64px);
+  padding-inline: 18px;
+  background: var(--tf-bg, var(--color-field));
+  border-radius: var(--tf-radius, var(--radius-field));
+  box-shadow: 0 0 0 3px var(--tf-ring), 0 0 22px var(--tf-glow);
+  transition: box-shadow var(--dur-base) var(--ease-out);
+}
+
+.tf__field:focus-within {
+  --tf-ring: rgba(59, 130, 246, 0.7);
+  --tf-glow: rgba(59, 130, 246, 0.35);
+}
+
+.tf__field.is-valid {
+  --tf-ring: rgba(34, 197, 94, 0.55);
+}
+
+.tf__field.is-valid:focus-within {
+  --tf-ring: rgba(34, 197, 94, 0.8);
+  --tf-glow: rgba(34, 197, 94, 0.3);
+}
+
+.tf__field.is-invalid {
+  --tf-ring: rgba(239, 68, 68, 0.8);
+  --tf-glow: rgba(239, 68, 68, 0.3);
+}
+
+.tf__field.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.tf__field.is-shaking {
+  animation: tf-shake 450ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* ---- Leading icon + divider ------------------------------------------- */
+
+.tf__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 27px;
+  margin-right: 3px;
+  color: var(--color-icon);
+  transition: color var(--dur-base) var(--ease-out);
+}
+
+.tf__divider {
+  flex: none;
+  width: 2px;
+  height: 38px;
+  border-radius: 1px;
+  background: var(--color-field-divider);
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+
+.tf__field:focus-within .tf__icon {
+  color: var(--color-primary);
+}
+
+.tf__field:focus-within .tf__divider {
+  background: var(--color-primary);
+}
+
+.tf__field.is-invalid .tf__icon {
+  color: var(--color-error);
+}
+
+.tf__field.is-invalid .tf__divider {
+  background: var(--color-error);
+}
+
+/* ---- Input ------------------------------------------------------------- */
+
+.tf__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-field-text);
+  font-family: var(--font-body);
+  font-size: var(--tf-font-size, 24px);
+  line-height: 1;
+  text-overflow: ellipsis;
+}
+
+/* The whole pill shows the focus ring (via :focus-within), so the bare input
+   must not draw its own rectangle. Higher specificity than the global rule. */
+.tf__input:focus-visible {
+  outline: none;
+}
+
+.tf__input::placeholder {
+  color: var(--color-placeholder);
+  opacity: 1;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.tf__input:focus::placeholder {
+  opacity: 0.55;
+}
+
+.tf__input:disabled {
+  cursor: not-allowed;
+}
+
+/* Keep browser autofill from painting its own yellow/blue background */
+.tf__input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 100px var(--color-field) inset;
+  -webkit-text-fill-color: var(--color-field-text);
+}
+
+/* ---- Password toggle --------------------------------------------------- */
+
+.tf__toggle {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin-right: -10px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-icon);
+  cursor: pointer;
+  transition: color var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tf__toggle:hover:not(:disabled) {
+  color: var(--color-primary);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.tf__toggle:disabled {
+  cursor: not-allowed;
+}
+
+.tf__eye {
+  position: relative;
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.tf__eye svg {
+  position: absolute;
+  inset: 0;
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+
+.tf__eye-off {
+  opacity: 0;
+  transform: scale(0.6) rotate(-20deg);
+}
+
+.tf__eye.is-visible .tf__eye-on {
+  opacity: 0;
+  transform: scale(0.6) rotate(20deg);
+}
+
+.tf__eye.is-visible .tf__eye-off {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Valid check mark -------------------------------------------------- */
+
+.tf__status {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--color-success);
+  animation: tf-pop 300ms var(--ease-out);
+}
+
+/* ---- Error / hint message (animated collapse, no layout jump) ---------- */
+
+.tf__message {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
+}
+
+.tf__message.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.tf__message-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tf__text {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 18px 0;
+  font: 16px/1.3 var(--font-body);
+  color: var(--color-text-on-dark);
+  opacity: 0.8;
+}
+
+.tf__text.is-error {
+  color: var(--color-error-text);
+  opacity: 1;
+}
+
+.tf__text-icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* ---- Keyframes --------------------------------------------------------- */
+
+@keyframes tf-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes tf-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
