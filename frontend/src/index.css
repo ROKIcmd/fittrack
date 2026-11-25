@@ -1,10 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Goudy+Bookletter+1911&family=Google+Sans+Code:wght@700&display=swap");
 @import "tailwindcss";
 
+@theme {
+  --font-display: "Britannic Bold", "Alfa Slab One", Georgia, serif;
+  --font-body: "Goudy Bookletter 1911", "Goudy Old Style", Georgia, serif;
+  --font-ui: "Google Sans Code", ui-monospace, Menlo, monospace;
+}
+
 body {
   margin: 0;
   background: #000;
 }
+
 
 /* Fonts (plain CSS, no @theme needed) */
 .font-display { font-family: "Britannic Bold", "Alfa Slab One", Georgia, serif; }

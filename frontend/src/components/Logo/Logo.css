@@ -1,0 +1,38 @@
+/* ==========================================================================
+   Logo – values from Figma "Group 98":
+   emblem box 70 × 70 (emblem inset 9.38% / 15.63% / 14.06% / 18.75%),
+   wordmark Inter Bold 34px / 48px, #f8fafc, starting 69px from the left.
+   ========================================================================== */
+
+.logo {
+  --u: var(--logo-scale, 1);
+  display: flex;
+  align-items: flex-start;
+  width: max-content;
+}
+
+.logo__mark {
+  position: relative;
+  flex: none;
+  width: calc(70px * var(--u));
+  height: calc(70px * var(--u));
+  margin-right: calc(-1px * var(--u));
+}
+
+.logo__emblem {
+  position: absolute;
+  inset: 9.38% 15.63% 14.06% 18.75%;
+  width: auto;
+  height: auto;
+  max-width: none;
+  object-fit: contain;
+}
+
+.logo__text {
+  margin-top: calc(17px * var(--u));
+  color: var(--color-logo-text);
+  font-family: var(--font-ui);
+  font-size: calc(34px * var(--u));
+  font-weight: 700;
+  line-height: calc(48px * var(--u));
+}
