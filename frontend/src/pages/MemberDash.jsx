@@ -100,11 +100,11 @@ function MemberDashboard() {
             <div className="relative min-h-screen w-full overflow-hidden bg-[#090e16] text-white">
                 {/* Background photo + dark overlay that fades into the page colour */}
                 <img
-                    src="/images/gym-bg.png"
+                    src="../assets/gym-bg.jpeg"
                     alt=""
-                    className="anim-bg pointer-events-none absolute left-0 top-0 h-[780px] w-full object-cover opacity-60"
+                    className="anim-bg pointer-events-none absolute left-0 top-0 h-[780px] w-full object-cover opacity-80"
                 />
-                <div className="pointer-events-none absolute left-0 top-0 h-[780px] w-full bg-gradient-to-b from-black/70 via-black/75 to-[#090e16]" />
+                <div className="pointer-events-none absolute left-0 top-0 h-[780px] w-full bg-gradient-to-b from-black/40 via-black/50 to-[#090e16]" />
 
                 <div className="relative z-10 mx-auto flex max-w-[1340px] gap-6 px-4 py-6 sm:px-6">
                     <Sidebar items={NAV_ITEMS} onLogout={handleLogout} />
