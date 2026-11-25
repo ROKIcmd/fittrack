@@ -1,0 +1,345 @@
+/* ==========================================================================
+   Member Sign Up page
+   Design reference: Figma frame "Member Sign up" (12:2), 1279 × 761.
+   Positions from that frame are kept as proportions so the layout scales.
+   ========================================================================== */
+
+.signup {
+  --signup-gutter: clamp(16px, 8.68vw, 111px); /* Figma: card left = 111 */
+  --signup-card-pad-x: clamp(20px, 6vw, 49px); /* Figma: fields are 436 wide in a 534 card */
+
+  /* Estimate of Figma "Rectangle 4": black on the left fading into the photo.
+     Replace with the exported overlay if you need pixel parity. */
+  --signup-overlay: linear-gradient(
+    90deg,
+    #000 0%,
+    #000 30%,
+    rgba(0, 0, 0, 0.55) 46%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+
+  position: relative;
+  display: grid;
+  align-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-block: 50px;
+  background: var(--color-bg);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* ---- Photo + overlay --------------------------------------------------- */
+
+/* Figma: photo starts at x = 378 and is 979 wide (clipped at the frame edge) */
+.signup__photo {
+  position: absolute;
+  inset: 0 auto 0 29.55%;
+  z-index: -2;
+  width: 76.55%;
+  overflow: hidden;
+  animation: signup-photo-in 1400ms var(--ease-out) backwards;
+}
+
+.signup__photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Derived from the Figma crop (top -70.53%, height 228.65%) */
+  object-position: 50% 54.8%;
+}
+
+.signup__shade {
+  position: absolute;
+  inset: -31px -28px;
+  z-index: -1;
+  background: var(--signup-overlay);
+}
+
+/* ---- Layout ------------------------------------------------------------ */
+
+.signup__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 645px) minmax(0, 1fr);
+  align-items: start;
+  width: 100%;
+}
+
+/* ---- Card -------------------------------------------------------------- */
+
+.signup__card {
+  position: relative;
+  grid-column: 1;
+  width: min(534px, calc(100% - var(--signup-gutter)));
+  margin-left: var(--signup-gutter);
+  padding: clamp(32px, 7vw, 52px) var(--signup-card-pad-x) clamp(36px, 5.5vw, 67px);
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  animation: signup-fade 600ms var(--ease-out) backwards;
+}
+
+/* Soft brand-colour glow drifting behind the form (transform only = cheap) */
+.signup__glow {
+  position: absolute;
+  top: -140px;
+  right: -120px;
+  z-index: 0;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(59, 130, 246, 0.22), transparent);
+  pointer-events: none;
+  animation: signup-glow 14s ease-in-out infinite alternate;
+}
+
+.signup__title,
+.signup__form,
+.signup__divider,
+.signup__footer {
+  position: relative;
+  z-index: 1;
+}
+
+.signup__title {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(38px, 9vw, 52px);
+  font-weight: 400;
+  line-height: 1.54; /* Figma: 52px type in an 80px line */
+  text-align: center;
+}
+
+.signup__form {
+  /* Mobile-friendly sizing for the reusable TextField via its CSS variables */
+  --tf-height: 64px;
+  --tf-font-size: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.signup__confirm {
+  margin-top: -5px; /* Figma: label row sits 15px under the last field */
+}
+
+.signup__actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 9px;
+}
+
+/* ---- Submission status message ---------------------------------------- */
+
+.signup__status {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-top: -16px; /* cancels the flex gap while closed */
+  opacity: 0;
+  transition:
+    grid-template-rows var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out),
+    margin-top var(--dur-base) var(--ease-out);
+}
+
+.signup__status.is-open {
+  grid-template-rows: 1fr;
+  margin-top: 0;
+  opacity: 1;
+}
+
+.signup__status-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.signup__status p {
+  margin: 0;
+  font: 17px/1.35 var(--font-body);
+  text-align: center;
+}
+
+.signup__status--success p {
+  color: var(--color-success-text);
+}
+
+.signup__status--error p {
+  color: var(--color-error-text);
+}
+
+/* ---- Divider + footer link -------------------------------------------- */
+
+.signup__divider {
+  width: min(375px, 86%); /* Figma: 375 of 436 */
+  height: 4px; /* estimated stroke – Figma exports it as an SVG line */
+  margin: 38px auto 25px;
+  border: 0;
+  border-radius: 2px;
+  background: #fff;
+}
+
+.signup__footer {
+  margin: 0;
+  color: var(--color-text-on-dark);
+  font-size: clamp(18px, 2.4vw, 24px);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.signup__footer a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.signup__footer a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* ---- Brand block (logo + headline) ------------------------------------ */
+
+.signup__brand {
+  grid-column: 2;
+  padding: 57px 24px 0 clamp(24px, 8.2vw, 105px); /* Figma: headline x = 750 */
+}
+
+.signup__logo {
+  margin-left: clamp(0px, 5.86vw, 75px); /* Figma: logo x = 825 */
+}
+
+.signup__headline {
+  max-width: 447px;
+  margin: clamp(32px, 6.1vw, 78px) 0 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 4.69vw, 60px);
+  font-weight: 400;
+  line-height: normal;
+}
+
+.signup__headline span {
+  color: var(--color-primary);
+}
+
+/* ---- Entrance animation (staggered via --i) ---------------------------- */
+
+.signup-reveal {
+  animation: signup-rise 650ms var(--ease-out) backwards;
+  animation-delay: calc(120ms + var(--i, 0) * 70ms);
+}
+
+/* ---- Tablet / mobile: single column ------------------------------------ */
+
+@media (max-width: 900px) {
+  .signup {
+    --signup-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.84));
+    padding-block: 28px;
+  }
+
+  .signup__photo {
+    inset: 0;
+    width: 100%;
+  }
+
+  .signup__layout {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 28px;
+  }
+
+  .signup__brand {
+    grid-column: 1;
+    order: -1;
+    padding: 0 var(--signup-gutter);
+  }
+
+  .signup__logo {
+    margin-left: 0;
+    --logo-scale: 0.8;
+  }
+
+  .signup__headline {
+    margin-top: 12px;
+    font-size: clamp(26px, 6.4vw, 40px);
+  }
+
+  .signup__card {
+    --signup-gutter: 16px;
+    grid-column: 1;
+    margin-inline: auto;
+    width: min(534px, calc(100% - 32px));
+  }
+}
+
+@media (max-width: 480px) {
+  .signup__form {
+    --tf-height: 56px;
+    --tf-font-size: 20px;
+    --tf-radius: 28px;
+  }
+
+  .signup__card {
+    border-radius: 36px;
+  }
+
+  .signup__glow {
+    animation: none; /* keep low-powered phones calm */
+  }
+}
+
+@media (max-width: 420px) {
+  .signup__form {
+    --tf-font-size: 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .signup__form {
+    --tf-font-size: 16px; /* lets "Verify Entered Password" fit; 16px also avoids iOS zoom-on-focus */
+  }
+}
+
+/* ---- Keyframes --------------------------------------------------------- */
+
+@keyframes signup-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes signup-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes signup-photo-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes signup-glow {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-60px, 80px, 0);
+  }
+}
