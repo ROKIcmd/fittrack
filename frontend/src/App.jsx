@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import LandingPage from "./pages/LandingPage.jsx";
 
 const Placeholder = ({ title }) => (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -19,7 +20,7 @@ export default function App() {
         <BrowserRouter>
             <Routes>
                 {/* FE 1: Public & Auth */}
-                <Route path="/" element={<Placeholder title="Landing Page" />} />
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Placeholder title="Login (Member / Trainer)" />} />
                 <Route path="/register" element={<Placeholder title="Register Step 1" />} />
                 <Route path="/register/details" element={<Placeholder title="Register Step 2" />} />
