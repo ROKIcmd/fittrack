@@ -1,7 +1,7 @@
 import Hero from "../components/Hero";
 import Navbar from "../components/Navbar";
 import AuthButtons from "../components/AuthButton";
-import Button from "../components/Button";
+import LinkButton from "../components/LinkButton";
 import FeatureStrip from "../components/FeaturStrip";
 import MembershipTiers from "../components/MembershipTier";
 import { features } from "../components/Features";
@@ -24,9 +24,9 @@ export default function LandingPage() {
           <p className="mt-5 max-w-sm text-2xl leading-snug md:text-3xl">
             Track your workouts, manage your membership, and reach your fitness goals - all in one place.
           </p>
-          <Button to="/register" size="lg" className="mt-8 md:ml-18">
+          <LinkButton to="/register" size="lg" className="mt-8 md:ml-18">
             Get Started
-          </Button>
+          </LinkButton>
         </div>
       </Hero>
 

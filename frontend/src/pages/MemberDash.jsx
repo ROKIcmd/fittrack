@@ -1,5 +1,7 @@
 import { AnimationStyles, Animate } from "../Styles/Animations.jsx";
-import { useNavigate, Navigate, Link } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
+import { House } from "lucide-react";
+import MemberLayout from "../components/MemberLayout";
 import {
     Card,
     CardTitle,
@@ -9,9 +11,6 @@ import {
     StatCard,
     WorkoutLogItem,
     UpdateItem,
-    Sidebar,
-    Breadcrumb,
-    ProfilePill,
     LineChart,
     Icon,
     fonts,
@@ -19,19 +18,6 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { dashboardService } from "../services/dashboardService";
 import { useDashboard } from "../hooks/useDashboard";
-
-/* ------------------------------------------------------------------ */
-/* Static config (navigation only)                                     */
-/* ------------------------------------------------------------------ */
-const NAV_ITEMS = [
-    { label: "Dashboard", icon: Icon.Home, href: "/member/dashboard", active: true },
-    { label: "Membership", icon: Icon.Sparkle, href: "/member/membership" },
-    { label: "Trainer", icon: Icon.UserCircle, href: "/member/trainer" },
-    { label: "Workout Plan", icon: Icon.Dumbbell, href: "/member/workout-plan" },
-    { label: "Workout Log", icon: Icon.Clipboard, href: "/member/workout-log" },
-    { label: "Progress", icon: Icon.TrendUp, href: "/member/progress" },
-    { label: "Profile", icon: Icon.Gear, href: "/member/profile" },
-];
 
 /* ------------------------------------------------------------------ */
 /* Formatting helpers                                                  */
@@ -107,16 +93,10 @@ function Empty({ children }) {
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 function MemberDashboard() {
-    const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const { data, loading, error } = useDashboard(dashboardService.getMemberDashboard, user?.id);
 
     if (!user) return <Navigate to="/login" replace />;
-
-    const handleLogout = () => {
-        logout();
-        navigate("/login", { replace: true });
-    };
 
     if (loading) {
         return (
@@ -151,41 +131,9 @@ function MemberDashboard() {
     return (
         <>
             <AnimationStyles />
-
-            <div className="relative min-h-screen w-full overflow-hidden bg-[#090e16] text-white">
-                <img
-                    src="https://www.corehandf.com/cdn/shop/articles/Chiswick-EG-7_1.jpg?v=1782411009"
-                    alt=""
-                    className="anim-bg pointer-events-none absolute left-0 top-0 h-[780px] w-full object-cover opacity-80"
-                />
-                <div className="pointer-events-none absolute left-0 top-0 h-[780px] w-full bg-gradient-to-b from-black/40 via-black/50 to-[#090e16]" />
-
-                <div className="relative z-10 mx-auto flex max-w-[1340px] gap-6 px-4 py-6 sm:px-6">
-                    <Sidebar items={NAV_ITEMS} onLogout={handleLogout} />
-
-                    <main className="min-w-0 flex-1">
-                        {/* ---------- Top bar ---------- */}
-                        <header className="flex flex-wrap items-start justify-between gap-4">
-                            <div>
-                                <Animate type="left" delay={0.1}>
-                                    <Breadcrumb label="Dashboard" />
-                                </Animate>
-                                <Animate
-                                    as="h1"
-                                    type="up"
-                                    delay={0.2}
-                                    className={`${fonts.ui} mt-5 text-3xl font-semibold sm:text-4xl`}
-                                >
-                                    Welcome, <span className="text-[#60a5fa]">{firstName}!</span>
-                                </Animate>
-                            </div>
-                            <Animate type="card">
-                                <ProfilePill name={user?.fullName} />
-                            </Animate>
-                        </header>
-
-                        {/* ---------- Main grid ---------- */}
-                        <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_426px]">
+            {/* Sidebar, top bar, "Welcome" heading and background now come from the shared MemberLayout */}
+            <MemberLayout pageTitle="Dashboard" PageIcon={House} userName={user.fullName} firstName={firstName}>
+                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_426px]">
                             {/* LEFT COLUMN */}
                             <div className="flex flex-col gap-5">
                                 {/* Membership */}
@@ -429,9 +377,7 @@ function MemberDashboard() {
                                 </Card>
                             </Animate>
                         </div>
-                    </main>
-                </div>
-            </div>
+            </MemberLayout>
         </>
     );
 }

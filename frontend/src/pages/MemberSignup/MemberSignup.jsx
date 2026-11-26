@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../../components/Button/Button';
 import Checkbox from '../../components/Checkbox/Checkbox';
 import { LockIcon, MailIcon } from '../../components/Icons/Icons';
-import Logo from '../../components/Logo/Logo';
+import Logo from '../../components/Logo';
 import PasswordStrength from '../../components/PasswordStrength/PasswordStrength';
 import TextField from '../../components/TextField/TextField';
 import { checkEmail } from '../../services/authService';
