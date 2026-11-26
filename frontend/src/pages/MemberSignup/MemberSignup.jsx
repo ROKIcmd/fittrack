@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '../../components/Button/Button';
 import Checkbox from '../../components/Checkbox/Checkbox';
 import { LockIcon, MailIcon } from '../../components/Icons/Icons';
 import Logo from '../../components/Logo/Logo';
 import PasswordStrength from '../../components/PasswordStrength/PasswordStrength';
 import TextField from '../../components/TextField/TextField';
-import { useAuth } from '../../context/AuthContext';
+import { checkEmail } from '../../services/authService';
 import './MemberSignup.css';
 
 const FIELD_ORDER = ['email', 'password', 'confirmPassword', 'confirmed'];
@@ -43,25 +44,8 @@ function getErrors(values) {
   };
 }
 
-function deriveNameFromEmail(email) {
-  const localPart = email.split('@')[0] || 'Member';
-  const parts = localPart
-      .split(/[._-]+/)
-      .filter(Boolean)
-      .map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase());
-
-  return {
-    firstName: parts[0] || 'Member',
-    lastName: parts.slice(1).join(' ') || 'User',
-  };
-}
-
-export default function MemberSignup({
-                                       loginHref = '/login',
-                                       onLoginClick,
-                                       onRegisterSuccess = () => {},
-                                     }) {
-  const { register } = useAuth();
+export default function MemberSignup({ loginHref = '/login' }) {
+  const navigate = useNavigate();
   const [values, setValues] = useState(INITIAL_VALUES);
   const [touched, setTouched] = useState({});
   const [shake, setShake] = useState(INITIAL_SHAKE);
@@ -83,7 +67,7 @@ export default function MemberSignup({
     const { name, type, value, checked } = event.target;
     setValues((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     if (name === 'confirmed') setTouched((prev) => ({ ...prev, confirmed: true }));
-    if (status === 'success' || status === 'error') setStatus('idle');
+    if (status === 'error') setStatus('idle');
   }
 
   function handleBlur(event) {
@@ -93,7 +77,7 @@ export default function MemberSignup({
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (status === 'loading' || status === 'success') return;
+    if (status === 'loading') return;
 
     setTouched({ email: true, password: true, confirmPassword: true, confirmed: true });
 
@@ -101,9 +85,7 @@ export default function MemberSignup({
     if (invalidFields.length > 0) {
       setShake((prev) => {
         const next = { ...prev };
-        invalidFields.forEach((name) => {
-          next[name] += 1;
-        });
+        invalidFields.forEach((name) => { next[name] += 1; });
         return next;
       });
       inputRefs[invalidFields[0]].current?.focus();
@@ -113,158 +95,150 @@ export default function MemberSignup({
     setStatus('loading');
     try {
       const cleanEmail = values.email.trim();
-      const { firstName, lastName } = deriveNameFromEmail(cleanEmail);
-      const user = await register({
-        firstName,
-        lastName,
-        email: cleanEmail,
-        password: values.password,
+      // Validate email availability with backend
+      await checkEmail(cleanEmail);
+
+      setStatus('idle');
+      // Pass verified credentials to step 2
+      navigate('/register/details', {
+        state: { email: cleanEmail, password: values.password },
       });
-      setStatusMessage('Your account has been created.');
-      setStatus('success');
-      onRegisterSuccess(user);
     } catch (error) {
-      setStatusMessage(error.message || 'Something went wrong. Please try again.');
+      setStatusMessage(error.message || 'Email is already taken or invalid.');
       setStatus('error');
+      setShake((prev) => ({ ...prev, email: prev.email + 1 }));
     }
   }
 
   const reveal = (index) => ({ '--i': index });
-  const statusOpen = status === 'success' || status === 'error';
+  const statusOpen = status === 'error';
 
   return (
-      <main className="signup">
-        <div className="signup__photo" aria-hidden="true">
-          <img className="signup__photo-img" src="/assets/gym-bg.png" alt="" />
-        </div>
-        <div className="signup__shade" aria-hidden="true" />
+    <main className="signup">
+      <div className="signup__photo" aria-hidden="true">
+        <img className="signup__photo-img" src="/assets/gym-bg.png" alt="" />
+      </div>
+      <div className="signup__shade" aria-hidden="true" />
 
-        <div className="signup__layout">
-          <section className="signup__card" aria-labelledby="signup-title">
-            <span className="signup__glow" aria-hidden="true" />
+      <div className="signup__layout">
+        <section className="signup__card" aria-labelledby="signup-title">
+          <span className="signup__glow" aria-hidden="true" />
 
-            <h1 id="signup-title" className="signup__title signup-reveal" style={reveal(0)}>
-              WELCOME
-            </h1>
+          <h1 id="signup-title" className="signup__title signup-reveal" style={reveal(0)}>
+            WELCOME
+          </h1>
 
-            <form
-                className="signup__form"
-                onSubmit={handleSubmit}
-                noValidate
-                aria-busy={status === 'loading'}
+          <form
+            className="signup__form"
+            onSubmit={handleSubmit}
+            noValidate
+            aria-busy={status === 'loading'}
+          >
+            <TextField
+              ref={inputRefs.email}
+              className="signup-reveal"
+              style={reveal(1)}
+              label="Email address"
+              name="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="juandelacruz@gmail.com"
+              icon={MailIcon}
+              value={values.email}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={visibleError('email')}
+              valid={isValid('email')}
+              shakeSignal={shake.email}
+              required
+            />
+
+            <TextField
+              ref={inputRefs.password}
+              className="signup-reveal"
+              style={reveal(2)}
+              label="Password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Enter Password"
+              icon={LockIcon}
+              value={values.password}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={visibleError('password')}
+              valid={isValid('password')}
+              shakeSignal={shake.password}
+              required
             >
-              <TextField
-                  ref={inputRefs.email}
-                  className="signup-reveal"
-                  style={reveal(1)}
-                  label="Email address"
-                  name="email"
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  placeholder="juandelacruz@gmail.com"
-                  icon={MailIcon}
-                  value={values.email}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={visibleError('email')}
-                  valid={isValid('email')}
-                  shakeSignal={shake.email}
-                  required
-              />
+              <PasswordStrength password={values.password} />
+            </TextField>
 
-              <TextField
-                  ref={inputRefs.password}
-                  className="signup-reveal"
-                  style={reveal(2)}
-                  label="Password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Enter Password"
-                  icon={LockIcon}
-                  value={values.password}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={visibleError('password')}
-                  valid={isValid('password')}
-                  shakeSignal={shake.password}
-                  required
-              >
-                <PasswordStrength password={values.password} />
-              </TextField>
+            <TextField
+              ref={inputRefs.confirmPassword}
+              className="signup-reveal"
+              style={reveal(3)}
+              label="Verify password"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Verify Entered Password"
+              icon={LockIcon}
+              value={values.confirmPassword}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={visibleError('confirmPassword')}
+              valid={isValid('confirmPassword')}
+              shakeSignal={shake.confirmPassword}
+              required
+            />
 
-              <TextField
-                  ref={inputRefs.confirmPassword}
-                  className="signup-reveal"
-                  style={reveal(3)}
-                  label="Verify password"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Verify Entered Password"
-                  icon={LockIcon}
-                  value={values.confirmPassword}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={visibleError('confirmPassword')}
-                  valid={isValid('confirmPassword')}
-                  shakeSignal={shake.confirmPassword}
-                  required
-              />
+            <Checkbox
+              ref={inputRefs.confirmed}
+              className="signup__confirm signup-reveal"
+              style={reveal(4)}
+              name="confirmed"
+              label="Confirm Password"
+              checked={values.confirmed}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={visibleError('confirmed')}
+              shakeSignal={shake.confirmed}
+              required
+            />
 
-              <Checkbox
-                  ref={inputRefs.confirmed}
-                  className="signup__confirm signup-reveal"
-                  style={reveal(4)}
-                  name="confirmed"
-                  label="Confirm Password"
-                  checked={values.confirmed}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={visibleError('confirmed')}
-                  shakeSignal={shake.confirmed}
-                  required
-              />
+            <div className="signup__actions signup-reveal" style={reveal(5)}>
+              <Button type="submit" loading={status === 'loading'}>
+                Continue
+              </Button>
+            </div>
 
-              <div className="signup__actions signup-reveal" style={reveal(5)}>
-                <Button
-                    type="submit"
-                    loading={status === 'loading'}
-                    success={status === 'success'}
-                >
-                  {status === 'success' ? 'Done' : 'Register'}
-                </Button>
+            <div
+              className={`signup__status signup__status--${status}${statusOpen ? ' is-open' : ''}`}
+              role="status"
+              aria-live="polite"
+            >
+              <div className="signup__status-inner">
+                <p>{statusMessage}</p>
               </div>
+            </div>
+          </form>
 
-              <div
-                  className={`signup__status signup__status--${status}${statusOpen ? ' is-open' : ''}`}
-                  role="status"
-                  aria-live="polite"
-              >
-                <div className="signup__status-inner">
-                  <p>{statusMessage}</p>
-                </div>
-              </div>
-            </form>
+          <hr className="signup__divider signup-reveal" style={reveal(6)} />
 
-            <hr className="signup__divider signup-reveal" style={reveal(6)} />
+          <p className="signup__footer signup-reveal" style={reveal(7)}>
+            Already have an account? <a href={loginHref}>Log In</a>
+          </p>
+        </section>
 
-            <p className="signup__footer signup-reveal" style={reveal(7)}>
-              Already have an account?{' '}
-              <a href={loginHref} onClick={onLoginClick}>
-                Log In
-              </a>
-            </p>
-          </section>
-
-          <aside className="signup__brand">
-            <Logo className="signup-reveal signup__logo" style={reveal(2)} />
-            <p className="signup__headline signup-reveal" style={reveal(4)}>
-              Track, Manage, Guide and Organize, all in one <span>App</span>
-            </p>
-          </aside>
-        </div>
-      </main>
+        <aside className="signup__brand">
+          <Logo className="signup-reveal signup__logo" style={reveal(2)} />
+          <p className="signup__headline signup-reveal" style={reveal(4)}>
+            Track, Manage, Guide and Organize, all in one <span>App</span>
+          </p>
+        </aside>
+      </div>
+    </main>
   );
 }

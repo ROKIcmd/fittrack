@@ -28,16 +28,18 @@ public class DashboardService {
         return Optional.of(new DashboardResponse(
                 member.getId(),
                 member.getFirstName(),
+                member.getPrimaryGoal(),
                 toMembershipCard(membership),
                 buildPlans(membership),
                 buildBilling(memberId),
                 buildUpcoming(memberId, today),
                 buildRecentWorkouts(memberId, today),
                 buildProgress(memberId),
-                buildBodyStats(memberId),
+                buildBodyStats(member),
                 buildNotifications(memberId),
                 buildTrainer(member)
         ));
+
     }
 
     private Membership latestMembership(String memberId) {
@@ -129,9 +131,15 @@ public class DashboardService {
                 .toList();
     }
 
-    private BodyStats buildBodyStats(String memberId) {
-        List<BodyMetric> metrics = sortedMetrics(memberId);
-        if (metrics.isEmpty()) return null;
+    private BodyStats buildBodyStats(Member member) {
+        List<BodyMetric> metrics = sortedMetrics(member.getId());
+        if (metrics.isEmpty()) {
+            if (member.getHeightMeters() > 0 && member.getTargetWeightKg() > 0) {
+                double bmi = Math.round((member.getTargetWeightKg() / (member.getHeightMeters() * member.getHeightMeters())) * 10.0) / 10.0;
+                return new BodyStats(LocalDate.now(), member.getTargetWeightKg(), 0.0, 0.0, bmi, "Welcome to FitTrack!");
+            }
+            return null;
+        }
         BodyMetric latest = metrics.get(metrics.size() - 1);
         return new BodyStats(latest.getRecordedDate(), latest.getWeightKg(), latest.getBodyFatPercent(),
                 latest.getMuscleMassKg(), latest.getBmi(), latest.getTrainerNote());
@@ -153,7 +161,8 @@ public class DashboardService {
                 .map(t -> new TrainerCard(t.getId(), t.getFullName(), t.getEducation(),
                         t.getSpecialization(), t.getYearsOfExperience(), t.getShortMessage(),
                         store.users().findMembersByTrainer(t.getId()).size(),
-                        null))   // no photo field yet, frontend uses a placeholder
+                        null))
                 .orElse(null);
     }
+
 }

@@ -8,6 +8,7 @@ import java.util.List;
 public record DashboardResponse(
         String memberId,
         String firstName,
+        String primaryGoal,
         MembershipCard membership,
         List<PlanOption> plans,
         List<BillingItem> billingHistory,
@@ -18,8 +19,6 @@ public record DashboardResponse(
         List<NotificationItem> notifications,
         TrainerCard trainer
 ) {
-
-    /** Membership widget: current plan, status, and renewal countdown. */
     public record MembershipCard(
             String tier,
             String cycle,
@@ -30,7 +29,6 @@ public record DashboardResponse(
             List<String> inclusions
     ) {}
 
-    /** One card in the Bronze / Silver / Gold list. */
     public record PlanOption(
             String tier,
             double monthlyPrice,
@@ -38,7 +36,6 @@ public record DashboardResponse(
             boolean current
     ) {}
 
-    /** One  in the billing history table. */
     public record BillingItem(
             LocalDate date,
             String referenceNumber,
@@ -56,7 +53,6 @@ public record DashboardResponse(
             String status
     ) {}
 
-    /** One row in the recent workout log. */
     public record WorkoutLogItem(
             String sessionId,
             String title,
@@ -68,13 +64,11 @@ public record DashboardResponse(
             String status
     ) {}
 
-    /** One point on the muscle gain chart. */
     public record ProgressPoint(
             LocalDate date,
             double muscleMassKg
     ) {}
 
-    /** The four stat tiles: weight, body fat, muscle mass, BMI. */
     public record BodyStats(
             LocalDate asOf,
             double weightKg,
@@ -84,7 +78,6 @@ public record DashboardResponse(
             String trainerNote
     ) {}
 
-    /** One item in the Updates list. */
     public record NotificationItem(
             String type,
             String title,
@@ -93,7 +86,6 @@ public record DashboardResponse(
             boolean read
     ) {}
 
-    /** The personal trainer card (read-only). */
     public record TrainerCard(
             String trainerId,
             String fullName,
