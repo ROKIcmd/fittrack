@@ -1,21 +1,36 @@
 
-# Gym Membership App
-<p align="left">
-  <img src="https://img.shields.io/badge/Java_21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java">
-  <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white" alt="Git">
-  <img src="https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot">
-  <img src="https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white" alt="Maven">
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
-  <img src="https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
-  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
-  <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS">
+
+<p align="center">
+  <img src="/cf5fe00f-d53a-4767-9f5d-8c6cef6859b9.webp" alt="FitTrack Logo" width="120" />
 </p>
 
-[NOTE] The most up-to-date branch is currently in `origin/fe-auth` to keep the working tree clean for `origin/main`. As of 11/26/2026, the minimum submission requirements for the lab, the Design Patterns, are documented in this section ([jump](#design-patterns)). To keep track of our progress for the capstone for the third requirement, see the patch notes ([jump](#patch-notes)).
+<h1 align="center">FITTRACK</h1>
 
-A comprehensive **Gym Membership Management App** designed for Admins, Trainers, and Members unifies facility operations, coaching workflows, and personal fitness tracking into a single system.
+<p align="center">
+  <strong>A unified Gym Membership Management App for Admins, Trainers, and Members.</strong>
+</p>
 
-Below is the architectural breakdown, feature specifications, and data structure required to build and operate the platform.
+<p align="center">
+  Bringing together facility operations, coaching workflows, and personal fitness tracking into a single full-stack platform. Below is the architectural breakdown, feature specifications, and data structure required to build and operate the system.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Java_21-1E293B?style=for-the-badge&logo=openjdk&logoColor=60A5FA" alt="Java 21" />
+  <img src="https://img.shields.io/badge/Spring_Boot-2563EB?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot" />
+  <img src="https://img.shields.io/badge/Maven-334155?style=for-the-badge&logo=apachemaven&logoColor=93C5FD" alt="Maven" />
+  <img src="https://img.shields.io/badge/React_19-0284C7?style=for-the-badge&logo=react&logoColor=white" alt="React 19" />
+  <img src="https://img.shields.io/badge/JavaScript-475569?style=for-the-badge&logo=javascript&logoColor=BFDBFE" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/Vite-1D4ED8?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-334155?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Git-1E293B?style=for-the-badge&logo=git&logoColor=93C5FD" alt="Git" />
+</p>
+
+<p align="center">
+  <a href="#application-design">Architecture</a> •
+  <a href="#about-the-project">Features</a> •
+  <a href="#design-patterns">Design Patterns</a> •
+  <a href="#patch-notes">Patch Notes</a>
+</p>
 
 ## About the Project
 
