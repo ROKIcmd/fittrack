@@ -1,7 +1,9 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { House, Sparkles, CircleUser, Dumbbell, ClipboardList, TrendingUp, Settings, LogOut } from "lucide-react";
 import Logo from "./Logo";
+import { useAuth } from "../context/AuthContext";
 
+// The single sidebar for every member page.
 const links = [
   { to: "/member/dashboard", label: "Dashboard", Icon: House },
   { to: "/member/membership", label: "Membership", Icon: Sparkles },
@@ -13,6 +15,13 @@ const links = [
 ];
 
 export default function Sidebar() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <aside className="animate-slide-right flex flex-col rounded-[25px] bg-[#1f2937] p-4 lg:w-[154px] lg:shrink-0 lg:px-3 lg:py-5">
       <Logo size="sm" />
@@ -35,11 +44,11 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-4 hidden border-t border-white/20 pt-4 lg:block">
-        <NavLink to="/" className="flex items-center gap-2 px-2 text-xs font-medium text-white hover:text-blue-300">
+      <div className="mt-4 border-t border-white/20 pt-4">
+        <button onClick={handleLogout} className="flex items-center gap-2 px-2 text-xs font-medium text-white transition hover:text-blue-300">
           <LogOut className="h-5 w-5" strokeWidth={1.5} />
           Logout
-        </NavLink>
+        </button>
       </div>
     </aside>
   );

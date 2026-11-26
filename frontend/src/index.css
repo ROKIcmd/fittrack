@@ -12,18 +12,52 @@ body {
   background: #000;
 }
 
+/* Fonts (plain CSS + @theme support) */
+.font-display {
+  font-family: "Britannic Bold", "Alfa Slab One", Georgia, serif;
+}
+.font-body {
+  font-family: "Goudy Bookletter 1911", "Goudy Old Style", Georgia, serif;
+}
+.font-ui {
+  font-family: "Google Sans Code", ui-monospace, Menlo, monospace;
+}
 
-/* Fonts (plain CSS, no @theme needed) */
-.font-display { font-family: "Britannic Bold", "Alfa Slab One", Georgia, serif; }
-.font-body { font-family: "Goudy Bookletter 1911", "Goudy Old Style", Georgia, serif; }
-.font-ui { font-family: "Google Sans Code", ui-monospace, Menlo, monospace; }
+/* Animations (skipped for users who prefer reduced motion) */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
 
-/* Animations (plain CSS; skipped for people who prefer reduced motion) */
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes fade-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-@keyframes slide-right { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
-@keyframes pop-in { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: none; } }
-@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* Extra animations: chart line, progress bar, pulse ring */
+@keyframes draw-line {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes fill-w {
+  from { width: 0; }
+  to { width: var(--w); }
+}
+@keyframes ring {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .animate-fade-in { animation: fade-in 0.6s ease-out both; }
@@ -31,4 +65,8 @@ body {
   .animate-slide-right { animation: slide-right 0.65s cubic-bezier(0.22, 1, 0.36, 1) both; }
   .animate-pop-in { animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
   .animate-grow-x { animation: grow-x 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+  .animate-draw { stroke-dasharray: 1; animation: draw-line 1.6s cubic-bezier(0.4, 0, 0.2, 1) both; }
+  .animate-fill { animation: fill-w 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both; }
+  .animate-ring { animation: ring 1.8s ease-out infinite; }
 }

@@ -5,9 +5,23 @@ import {
 } from "../services/authService";
 
 const AuthContext = createContext(null);
+const KEY = "fittrack-user";
+
+// Read the saved user (if any) so a page refresh doesn't log you out
+function readSavedUser() {
+    try { return JSON.parse(sessionStorage.getItem(KEY)); } catch { return null; }
+}
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
+    const [user, setUserState] = useState(readSavedUser);
+
+    function setUser(next) {
+        setUserState(next);
+        try {
+            if (next) sessionStorage.setItem(KEY, JSON.stringify(next));
+            else sessionStorage.removeItem(KEY);
+        } catch { /* storage unavailable */ }
+    }
 
     async function loginUser(credentials) {
         const loggedInUser = await loginRequest(credentials);

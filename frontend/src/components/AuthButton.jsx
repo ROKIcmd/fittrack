@@ -1,10 +1,10 @@
-import Button from "./Button";
+import LinkButton from "./LinkButton";
 
 export default function AuthButtons() {
   return (
     <>
-      <Button to="/login" variant="outline">Log In</Button>
-      <Button to="/register">Sign Up</Button>
+      <LinkButton to="/login" variant="outline">Log In</LinkButton>
+      <LinkButton to="/register">Sign Up</LinkButton>
     </>
   );
 }
