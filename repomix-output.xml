@@ -1,0 +1,3285 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+The content has been processed where comments have been removed, content has been compressed (code blocks are separated by ⋮---- delimiter).
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Code comments have been removed from supported file types
+- Content has been compressed - code blocks are separated by ⋮---- delimiter
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+backend/
+  .mvn/
+    wrapper/
+      maven-wrapper.properties
+  src/
+    main/
+      java/
+        com/
+          fittrack/
+            backend/
+              config/
+                DemoSeeder.java
+              controller/
+                AuthController.java
+                DashboardController.java
+              dto/
+                DashboardResponse.java
+              model/
+                BillingCycle.java
+                BillingRecord.java
+                BodyMetric.java
+                DietPlan.java
+                Exercise.java
+                FitnessPlan.java
+                Member.java
+                Membership.java
+                MembershipTier.java
+                Notification.java
+                PaymentStatus.java
+                RescheduleRequest.java
+                Trainer.java
+                TrainingSession.java
+                User.java
+                WorkoutPlan.java
+              repository/
+                DataStore.java
+                FileRepository.java
+                NotificationRepository.java
+                PlanRepository.java
+                Repository.java
+                UserRepository.java
+              service/
+                DashboardService.java
+              BackendApplication.java
+      resources/
+        application.properties
+    test/
+      java/
+        com/
+          fittrack/
+            backend/
+              BackendApplicationTests.java
+  .gitattributes
+  .gitignore
+  CorsConfig.java
+  mvnw
+  mvnw.cmd
+  pom.xml
+data/
+  memberships.dat
+  metrics.dat
+  notifications.dat
+  sessions.dat
+  users.dat
+frontend/
+  public/
+    assets/
+      gym-bg.jpeg
+      gym-bg.png
+      hero-image.jpg
+      README-trainer-details.txt
+      README.txt
+      trainer-bg.png
+      trainer-photo.png
+    favicon.svg
+    icons.svg
+  src/
+    assets/
+      hero.png
+      react.svg
+      vite.svg
+    components/
+      Button/
+        Button.css
+        Button.jsx
+      Checkbox/
+        Checkbox.css
+        Checkbox.jsx
+      Icons/
+        Icons.jsx
+      Logo/
+        Logo.css
+        Logo.jsx
+      PasswordStrength/
+        PasswordStrength.css
+        PasswordStrength.jsx
+      QrPanel/
+        QrPanel.css
+        QrPanel.jsx
+      Select/
+        Select.css
+        Select.jsx
+      TextField/
+        TextField.css
+        TextField.jsx
+      AuthButton.jsx
+      Button.jsx
+      DietPlan.jsx
+      Features.js
+      FeaturStrip.jsx
+      Hero.jsx
+      LogDetails.jsx
+      LogListItem.jsx
+      Logo.jsx
+      MemberDashComp.jsx
+      MemberLayout.jsx
+      Membership.js
+      MembershipCard.jsx
+      MembershipTier.jsx
+      Navbar.jsx
+      Panel.jsx
+      PlanCalendar.jsx
+      PlanDetails.jsx
+      RescheduleForm.jsx
+      SectionCard.jsx
+      Sidebar.jsx
+      StatusBadge.jsx
+    context/
+      AuthContext.jsx
+    data/
+      holidays.js
+      mockData.js
+      workoutLogs.js
+      workoutPlans.js
+    hooks/
+      useDashboard.js
+    pages/
+      Member/
+        WorkoutLogPage.jsx
+        WorkoutPlanPage.jsx
+      MemberSignup/
+        MemberSignup.css
+        MemberSignup.jsx
+      Registration/
+        Registration.css
+        Registration.jsx
+      RegistrationDetails/
+        RegistrationDetails.css
+        RegistrationDetails.jsx
+      TrainerDetails/
+        TrainerDetails.css
+        TrainerDetails.jsx
+      LandingPage.jsx
+      Login.jsx
+      MemberDash.jsx
+    services/
+      api.js
+      auth.js
+      authService.js
+      dashboardService.js
+      registration.js
+      registrationDetails.js
+    Styles/
+      Animations.jsx
+      global.css
+    utils/
+      validators.js
+    App.css
+    App.jsx
+    index.css
+    main.jsx
+  .gitignore
+  eslint.config.js
+  index.html
+  package.json
+  README.md
+  vite.config.js
+.gitignore
+cf5fe00f-d53a-4767-9f5d-8c6cef6859b9.webp
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="backend/src/main/java/com/fittrack/backend/config/DemoSeeder.java">
+package com.fittrack.backend.config;
+⋮----
+import com.fittrack.backend.model.*;
+import com.fittrack.backend.repository.DataStore;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+⋮----
+import java.time.LocalDate;
+import java.time.LocalTime;
+⋮----
+public class DemoSeeder implements CommandLineRunner {
+⋮----
+static final String MEMBER_ID = "M-TEST-001";
+static final String MEMBER_EMAIL = "juan.cruz@test.co";
+static final String TRAINER_ID = "T-TEST-001";
+static final String TRAINER_EMAIL = "trainer.test@fittrack.com";
+⋮----
+public void run(String... args) {
+⋮----
+private void seedTrainer(DataStore store) {
+⋮----
+private void seedMember(DataStore store) {
+⋮----
+private void seedMembership(DataStore store) {
+⋮----
+private void seedSessions(DataStore store) {
+⋮----
+private void addSession(DataStore store, String id, LocalDate date, String title,
+⋮----
+private void seedMetrics(DataStore store) {
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/controller/DashboardController.java">
+package com.fittrack.backend.controller;
+⋮----
+import com.fittrack.backend.dto.DashboardResponse;
+import com.fittrack.backend.service.DashboardService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+⋮----
+import java.util.List;
+⋮----
+public class DashboardController {
+⋮----
+private final DashboardService dashboardService;
+⋮----
+public DashboardController(DashboardService dashboardService) {
+⋮----
+public ResponseEntity<DashboardResponse> dashboard(@PathVariable String id) {
+⋮----
+public ResponseEntity<List<DashboardResponse.WorkoutLogItem>> workouts(@PathVariable String id) {
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/BillingCycle.java">
+package com.fittrack.backend.model;
+⋮----
+private final int days;
+private final double priceMultiplier;
+⋮----
+BillingCycle(int days, double priceMultiplier) {
+⋮----
+public int getDays() { return days; }
+public double calculatePrice(MembershipTier tier) {
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/BillingRecord.java">
+package com.fittrack.backend.model;
+⋮----
+import java.io.Serializable;
+import java.time.LocalDate;
+⋮----
+public class BillingRecord implements Serializable {
+private static final long serialVersionUID = 1L;
+⋮----
+private String id;
+private String memberId;
+private MembershipTier tier;
+private BillingCycle cycle;
+private double amount;
+private String referenceNumber;
+private LocalDate billingDate;
+private PaymentStatus status;
+⋮----
+public BillingRecord(String id, String memberId, MembershipTier tier, BillingCycle cycle, String referenceNumber) {
+⋮----
+public void approve() { this.status = PaymentStatus.APPROVED; }
+public void decline() { this.status = PaymentStatus.DECLINED; }
+⋮----
+public String getId() { return id; }
+public String getMemberId() { return memberId; }
+public MembershipTier getTier() { return tier; }
+public BillingCycle getCycle() { return cycle; }
+public double getAmount() { return amount; }
+public String getReferenceNumber() { return referenceNumber; }
+public LocalDate getBillingDate() { return billingDate; }
+public PaymentStatus getStatus() { return status; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/BodyMetric.java">
+package com.fittrack.backend.model;
+⋮----
+import java.io.Serializable;
+import java.time.LocalDate;
+⋮----
+public class BodyMetric implements Serializable {
+private static final long serialVersionUID = 1L;
+⋮----
+private String id;
+private String memberId;
+private String trainerId;
+private LocalDate recordedDate;
+private double weightKg;
+private double bodyFatPercent;
+private double muscleMassKg;
+private double bmi;
+private String trainerNote;
+⋮----
+public BodyMetric(String id, String memberId, String trainerId, LocalDate recordedDate,
+⋮----
+private double calculateBmi(double weightKg, double heightMeters) {
+⋮----
+public String getId() { return id; }
+public String getMemberId() { return memberId; }
+public String getTrainerId() { return trainerId; }
+public LocalDate getRecordedDate() { return recordedDate; }
+public double getWeightKg() { return weightKg; }
+public double getBodyFatPercent() { return bodyFatPercent; }
+public double getMuscleMassKg() { return muscleMassKg; }
+public double getBmi() { return bmi; }
+public String getTrainerNote() { return trainerNote; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/DietPlan.java">
+package com.fittrack.backend.model;
+⋮----
+import java.time.LocalDate;
+⋮----
+public class DietPlan extends FitnessPlan {
+private int dailyEnergyKcal;
+private int proteinGrams;
+private int carbsGrams;
+private int fatsGrams;
+private double dailyWaterLiters;
+private String dietaryNotes;
+⋮----
+public DietPlan(String id, String planName, String memberId, String trainerId, String goal,
+⋮----
+public String getPlanType() { return "DIET"; }
+⋮----
+public int getDailyEnergyKcal() { return dailyEnergyKcal; }
+public void setDailyEnergyKcal(int dailyEnergyKcal) { this.dailyEnergyKcal = dailyEnergyKcal; }
+public int getProteinGrams() { return proteinGrams; }
+public void setProteinGrams(int proteinGrams) { this.proteinGrams = proteinGrams; }
+public int getCarbsGrams() { return carbsGrams; }
+public void setCarbsGrams(int carbsGrams) { this.carbsGrams = carbsGrams; }
+public int getFatsGrams() { return fatsGrams; }
+public void setFatsGrams(int fatsGrams) { this.fatsGrams = fatsGrams; }
+public double getDailyWaterLiters() { return dailyWaterLiters; }
+public void setDailyWaterLiters(double dailyWaterLiters) { this.dailyWaterLiters = dailyWaterLiters; }
+public String getDietaryNotes() { return dietaryNotes; }
+public void setDietaryNotes(String dietaryNotes) { this.dietaryNotes = dietaryNotes; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/Exercise.java">
+package com.fittrack.backend.model;
+⋮----
+import java.io.Serializable;
+⋮----
+public class Exercise implements Serializable {
+private static final long serialVersionUID = 1L;
+⋮----
+private String name;
+private String dayLabel;
+private String routineCategory;
+private int sets;
+private String reps;
+private int restSeconds;
+private double loadKg;
+⋮----
+public Exercise(String name, String dayLabel, String routineCategory, int sets, String reps, int restSeconds, double loadKg) {
+⋮----
+public String getName() {
+⋮----
+public String getDayLabel() {
+⋮----
+public String getRoutineCategory() {
+⋮----
+public int getSets() {
+⋮----
+public String getReps() {
+⋮----
+public int getRestSeconds() {
+⋮----
+public double getLoadKg() {
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/FitnessPlan.java">
+package com.fittrack.backend.model;
+⋮----
+import java.io.Serializable;
+import java.time.LocalDate;
+⋮----
+public abstract class FitnessPlan implements Serializable {
+private static final long serialVersionUID = 1L;
+⋮----
+private String id;
+private String planName;
+private String memberId;
+private String trainerId;
+private String goal;
+private int durationWeeks;
+private LocalDate startDate;
+private boolean draft;
+⋮----
+public FitnessPlan(String id, String planName, String memberId, String trainerId,
+⋮----
+public abstract String getPlanType();
+⋮----
+public void publish(String memberId, LocalDate startDate) {
+⋮----
+public String getId() { return id; }
+public String getPlanName() { return planName; }
+public void setPlanName(String planName) { this.planName = planName; }
+public String getMemberId() { return memberId; }
+public String getTrainerId() { return trainerId; }
+public String getGoal() { return goal; }
+public void setGoal(String goal) { this.goal = goal; }
+public int getDurationWeeks() { return durationWeeks; }
+public void setDurationWeeks(int durationWeeks) { this.durationWeeks = durationWeeks; }
+public LocalDate getStartDate() { return startDate; }
+public boolean isDraft() { return draft; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/Member.java">
+package com.fittrack.backend.model;
+⋮----
+import java.time.LocalDate;
+⋮----
+public class Member extends User {
+private String phoneNumber;
+private LocalDate dateOfBirth;
+private String sex;
+private String primaryGoal;
+private double heightMeters;
+private double targetWeightKg;
+private String assignedTrainerId;
+⋮----
+public Member(String id, String firstName, String lastName, String email, String password,
+⋮----
+public String getRole() { return "MEMBER"; }
+⋮----
+public String getPhoneNumber() { return phoneNumber; }
+public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+public LocalDate getDateOfBirth() { return dateOfBirth; }
+public String getSex() { return sex; }
+public String getPrimaryGoal() { return primaryGoal; }
+public void setPrimaryGoal(String primaryGoal) { this.primaryGoal = primaryGoal; }
+public double getHeightMeters() { return heightMeters; }
+public void setHeightMeters(double heightMeters) { this.heightMeters = heightMeters; }
+public double getTargetWeightKg() { return targetWeightKg; }
+public void setTargetWeightKg(double targetWeightKg) { this.targetWeightKg = targetWeightKg; }
+public String getAssignedTrainerId() { return assignedTrainerId; }
+public void setAssignedTrainerId(String assignedTrainerId) { this.assignedTrainerId = assignedTrainerId; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/Membership.java">
+package com.fittrack.backend.model;
+⋮----
+import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+⋮----
+public class Membership implements Serializable {
+private static final long serialVersionUID = 1L;
+⋮----
+private String id;
+private String memberId;
+private MembershipTier tier;
+private BillingCycle cycle;
+private LocalDate startDate;
+private LocalDate renewalDate;
+private boolean active;
+⋮----
+public Membership(String id, String memberId, MembershipTier tier, BillingCycle cycle, LocalDate startDate) {
+⋮----
+public long getDaysRemaining() {
+⋮----
+public void renew(MembershipTier newTier, BillingCycle newCycle) {
+⋮----
+public String getId() { return id; }
+public String getMemberId() { return memberId; }
+public MembershipTier getTier() { return tier; }
+public BillingCycle getCycle() { return cycle; }
+public LocalDate getStartDate() { return startDate; }
+public LocalDate getRenewalDate() { return renewalDate; }
+public boolean isActive() { return active && getDaysRemaining() > 0; }
+public void setActive(boolean active) { this.active = active; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/MembershipTier.java">
+package com.fittrack.backend.model;
+⋮----
+import java.util.List;
+⋮----
+private final double monthlyPrice;
+private final List<String> inclusions;
+⋮----
+MembershipTier(double monthlyPrice, List<String> inclusions) {
+⋮----
+public double getMonthlyPrice() { return monthlyPrice; }
+public List<String> getInclusions() { return inclusions; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/Notification.java">
+package com.fittrack.backend.model;
+⋮----
+import java.io.Serializable;
+import java.time.LocalDateTime;
+⋮----
+public class Notification implements Serializable {
+private static final long serialVersionUID = 1L;
+⋮----
+private final String id;
+private final String memberId;
+private final Type type;
+private final String title;
+private final String message;
+private final LocalDateTime createdAt;
+private boolean read;
+⋮----
+public Notification(String id, String memberId, Type type, String title, String message, LocalDateTime createdAt) {
+⋮----
+public void markRead() { this.read = true; }
+⋮----
+public String getId() { return id; }
+public String getMemberId() { return memberId; }
+public Type getType() { return type; }
+public String getTitle() { return title; }
+public String getMessage() { return message; }
+public LocalDateTime getCreatedAt() { return createdAt; }
+public boolean isRead() { return read; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/PaymentStatus.java">
+package com.fittrack.backend.model;
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/RescheduleRequest.java">
+package com.fittrack.backend.model;
+⋮----
+import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+⋮----
+public class RescheduleRequest implements Serializable {
+private static final long serialVersionUID = 1L;
+⋮----
+private String id;
+private String sessionId;
+private String memberId;
+private String trainerId;
+private LocalDate requestedDate;
+private LocalTime requestedTime;
+private String reason;
+private String trainerReply;
+private LocalDateTime createdAt;
+private Status status;
+⋮----
+public RescheduleRequest(String id, String sessionId, String memberId, String trainerId,
+⋮----
+public void approve(String trainerReply) {
+⋮----
+public void decline(String trainerReply) {
+⋮----
+public String getId() { return id; }
+public String getSessionId() { return sessionId; }
+public String getMemberId() { return memberId; }
+public String getTrainerId() { return trainerId; }
+public LocalDate getRequestedDate() { return requestedDate; }
+public LocalTime getRequestedTime() { return requestedTime; }
+public String getReason() { return reason; }
+public String getTrainerReply() { return trainerReply; }
+public LocalDateTime getCreatedAt() { return createdAt; }
+public Status getStatus() { return status; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/Trainer.java">
+package com.fittrack.backend.model;
+⋮----
+public class Trainer extends User {
+private String education;
+private String specialization;
+private int yearsOfExperience;
+private String shortMessage;
+⋮----
+public Trainer(String id, String firstName, String lastName, String email, String password,
+⋮----
+public String getRole() { return "TRAINER"; }
+⋮----
+public String getEducation() { return education; }
+public void setEducation(String education) { this.education = education; }
+public String getSpecialization() { return specialization; }
+public void setSpecialization(String specialization) { this.specialization = specialization; }
+public int getYearsOfExperience() { return yearsOfExperience; }
+public void setYearsOfExperience(int yearsOfExperience) { this.yearsOfExperience = yearsOfExperience; }
+public String getShortMessage() { return shortMessage; }
+public void setShortMessage(String shortMessage) { this.shortMessage = shortMessage; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/TrainingSession.java">
+package com.fittrack.backend.model;
+⋮----
+import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+⋮----
+public class TrainingSession implements Serializable {
+private static final long serialVersionUID = 1L;
+⋮----
+private String id;
+private String memberId;
+private String trainerId;
+private String title;
+private LocalDate date;
+private LocalTime startTime;
+private int durationMinutes;
+private Status status;
+private String routineCategory;
+private int exercisesCompleted;
+private int totalExercises;
+private double loadKg;
+⋮----
+public TrainingSession(String id, String memberId, String trainerId, String title, LocalDate date, LocalTime startTime, int durationMinutes, Status status, String routineCategory, int exercisesCompleted, int totalExercises, double loadKg) {
+⋮----
+public void start() { this.status = Status.STARTED; }
+public void complete() { this.status = Status.COMPLETED; }
+public void markNoShow() { this.status = Status.NO_SHOW; }
+public void reschedule(LocalDate newDate, LocalTime newTime) {
+⋮----
+public String getRoutineCategory() { return routineCategory; }
+public int getExercisesCompleted() { return exercisesCompleted; }
+public int getTotalExercises() { return totalExercises; }
+public double getLoadKg() { return loadKg; }
+public String getId() { return id; }
+public String getMemberId() { return memberId; }
+public String getTrainerId() { return trainerId; }
+public String getTitle() { return title; }
+public LocalDate getDate() { return date; }
+public LocalTime getStartTime() { return startTime; }
+public int getDurationMinutes() { return durationMinutes; }
+public Status getStatus() { return status; }
+public void setStatus(Status status) { this.status = status; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/User.java">
+package com.fittrack.backend.model;
+⋮----
+import java.io.Serializable;
+⋮----
+public abstract class User implements Serializable {
+private static final long serialVersionUID = 1L;
+⋮----
+private String id;
+private String firstName;
+private String lastName;
+private String email;
+private String password;
+⋮----
+public User(String id, String firstName, String lastName, String email, String password) {
+⋮----
+public abstract String getRole();
+⋮----
+public String getFullName() { return firstName + " " + lastName; }
+public boolean verifyPassword(String input) { return this.password != null && this.password.equals(input); }
+⋮----
+public String getId() { return id; }
+public String getFirstName() { return firstName; }
+public void setFirstName(String firstName) { this.firstName = firstName; }
+public String getLastName() { return lastName; }
+public void setLastName(String lastName) { this.lastName = lastName; }
+public String getEmail() { return email; }
+public void setEmail(String email) { this.email = email; }
+public void setPassword(String password) { this.password = password; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/model/WorkoutPlan.java">
+package com.fittrack.backend.model;
+⋮----
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+⋮----
+public class WorkoutPlan extends FitnessPlan {
+private int daysPerWeek;
+private String coachingNotes;
+private final List<Exercise> exercises = new ArrayList<>();
+⋮----
+public WorkoutPlan(String id, String planName, String memberId, String trainerId, String goal,
+⋮----
+public String getPlanType() { return "WORKOUT"; }
+⋮----
+public void addExercise(Exercise exercise) { exercises.add(exercise); }
+public List<Exercise> getExercises() { return Collections.unmodifiableList(exercises); }
+public int getDaysPerWeek() { return daysPerWeek; }
+public void setDaysPerWeek(int daysPerWeek) { this.daysPerWeek = daysPerWeek; }
+public String getCoachingNotes() { return coachingNotes; }
+public void setCoachingNotes(String coachingNotes) { this.coachingNotes = coachingNotes; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/repository/DataStore.java">
+package com.fittrack.backend.repository;
+⋮----
+import com.fittrack.backend.model.*;
+⋮----
+public class DataStore {
+private static volatile DataStore instance;
+⋮----
+private final UserRepository users = new UserRepository();
+private final PlanRepository plans = new PlanRepository();
+private final NotificationRepository notifications = new NotificationRepository();
+private final Repository<Membership> memberships = new FileRepository<>("data/memberships.dat", Membership::getId);
+private final Repository<BillingRecord> billing = new FileRepository<>("data/billing.dat", BillingRecord::getId);
+private final Repository<TrainingSession> sessions = new FileRepository<>("data/sessions.dat", TrainingSession::getId);
+private final Repository<RescheduleRequest> reschedules = new FileRepository<>("data/reschedules.dat", RescheduleRequest::getId);
+private final Repository<BodyMetric> metrics = new FileRepository<>("data/metrics.dat", BodyMetric::getId);
+⋮----
+private DataStore() {}
+⋮----
+public static DataStore getInstance() {
+⋮----
+public UserRepository users() { return users; }
+public PlanRepository plans() { return plans; }
+public NotificationRepository notifications() { return notifications; }
+public Repository<Membership> memberships() { return memberships; }
+public Repository<BillingRecord> billing() { return billing; }
+public Repository<TrainingSession> sessions() { return sessions; }
+public Repository<RescheduleRequest> reschedules() { return reschedules; }
+public Repository<BodyMetric> metrics() { return metrics; }
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/repository/FileRepository.java">
+package com.fittrack.backend.repository;
+⋮----
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+⋮----
+public class FileRepository<T extends Serializable> implements Repository<T> {
+private final File file;
+private final Function<T, String> idExtractor;
+⋮----
+public FileRepository(String filePath, Function<T, String> idExtractor) {
+⋮----
+public synchronized T save(T entity) {
+⋮----
+public synchronized Optional<T> findById(String id) {
+⋮----
+public synchronized List<T> findAll() {
+⋮----
+public synchronized boolean deleteById(String id) {
+⋮----
+private List<T> readFromFile() {
+⋮----
+private void writeToFile(List<T> items) {
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/repository/NotificationRepository.java">
+package com.fittrack.backend.repository;
+⋮----
+import com.fittrack.backend.model.Notification;
+import java.util.Comparator;
+import java.util.List;
+⋮----
+public class NotificationRepository extends FileRepository<Notification> {
+⋮----
+public NotificationRepository() {
+⋮----
+public List<Notification> findByMemberId(String memberId) {
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/repository/PlanRepository.java">
+package com.fittrack.backend.repository;
+⋮----
+import com.fittrack.backend.model.DietPlan;
+import com.fittrack.backend.model.FitnessPlan;
+import com.fittrack.backend.model.WorkoutPlan;
+import java.util.List;
+⋮----
+public class PlanRepository extends FileRepository<FitnessPlan> {
+⋮----
+public PlanRepository() {
+⋮----
+public List<WorkoutPlan> findWorkoutPlansByMember(String memberId) {
+⋮----
+public List<DietPlan> findDietPlansByMember(String memberId) {
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/repository/Repository.java">
+package com.fittrack.backend.repository;
+⋮----
+import java.util.List;
+import java.util.Optional;
+⋮----
+public interface Repository<T> {
+T save(T entity);
+Optional<T> findById(String id);
+List<T> findAll();
+boolean deleteById(String id);
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/repository/UserRepository.java">
+package com.fittrack.backend.repository;
+⋮----
+import com.fittrack.backend.model.Member;
+import com.fittrack.backend.model.Trainer;
+import com.fittrack.backend.model.User;
+import java.util.List;
+import java.util.Optional;
+⋮----
+public class UserRepository extends FileRepository<User> {
+⋮----
+public UserRepository() {
+⋮----
+public Optional<User> findByEmail(String email) {
+⋮----
+public List<Member> findAllMembers() {
+⋮----
+public List<Trainer> findAllTrainers() {
+⋮----
+public List<Member> findMembersByTrainer(String trainerId) {
+</file>
+
+<file path="frontend/public/assets/README-trainer-details.txt">
+Trainer Details page: images to put in this folder
+(the sandbox it was built in could not download from figma.com)
+
+  trainer-bg.png     Figma node 48:67 "image 5"  -> export the ORIGINAL image.
+                     Dark gym photo behind the page (the page darkens it by 70%).
+  trainer-photo.png  Figma node 73:51 "image 7"  -> export the ORIGINAL image.
+                     Sample trainer portrait. In production pass the real
+                     photo with <TrainerDetails photoSrc="..." />.
+
+fittrack-emblem.svg (the logo mark in the sidebar) is the same file the
+Sign Up page already uses. If an image is missing the page still works:
+grey box for the photo, plain dark background, no logo mark.
+</file>
+
+<file path="frontend/public/assets/README.txt">
+dPut these files from Figma in this folder (the sandbox this was built in
+could not download from figma.com):
+
+  gym-bg.png            Figma node 13:43 "image 3" -> export the ORIGINAL image.
+                        Used by the Sign Up and Registration Details pages.
+  fittrack-emblem.svg   Figma node 154:232 "fittrack-emblem" -> Export as SVG.
+  payment-qr.png        Figma node 13:166 "image 4" -> export the image.
+                        Sample QR for the Registration Details page. In production, pass
+                        the real QR from your backend with <RegistrationDetails qrSrc=... />.
+                        If this file is missing, a "QR code will appear here"
+                        placeholder is shown instead.
+
+All are referenced as /assets/<name> and served from /public, so no import is needed.
+</file>
+
+<file path="frontend/public/favicon.svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" fill="none" viewBox="0 0 48 46"><path fill="#863bff" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" style="fill:#863bff;fill:color(display-p3 .5252 .23 1);fill-opacity:1"/><mask id="a" width="48" height="46" x="0" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M25.842 44.938c-.664.844-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.183c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.498 0-3.579-1.842-3.579H1.133c-.92 0-1.456-1.04-.92-1.787L9.91.473c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.578 1.842 3.578h11.377c.943 0 1.473 1.088.89 1.832L25.843 44.94z" style="fill:#000;fill-opacity:1"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#ede6ff" rx="5.508" ry="14.704" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -4.47 31.516)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#ede6ff" rx="10.399" ry="29.851" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -39.328 7.883)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#7e14ff" rx="5.508" ry="30.487" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -25.913 -14.639)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -32.644 -3.334)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -34.34 30.47)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#ede6ff" rx="14.072" ry="22.078" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="rotate(93.35 24.506 48.493)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx=".387" cy="8.972" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(39.51 .387 8.972)"/></g><g filter="url(#k)"><ellipse cx="47.523" cy="-6.092" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 47.523 -6.092)"/></g><g filter="url(#l)"><ellipse cx="41.412" cy="6.333" fill="#47bfff" rx="5.971" ry="9.665" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 41.412 6.333)"/></g><g filter="url(#m)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#n)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#o)"><ellipse cx="35.651" cy="29.907" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 35.651 29.907)"/></g><g filter="url(#p)"><ellipse cx="38.418" cy="32.4" fill="#47bfff" rx="5.971" ry="15.297" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 38.418 32.4)"/></g></g><defs><filter id="b" width="60.045" height="41.654" x="-19.77" y="16.149" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-54.613" y="-7.533" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-49.64" y="2.03" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-45.045" y="20.029" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-43.513" y="21.178" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="15.756" y="-17.901" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-27.636" y="-22.853" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="20.116" y="-38.415" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="24.641" y="-11.323" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="8.244" y="-2.416" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="18.713" y="10.588" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter></defs></svg>
+</file>
+
+<file path="frontend/public/icons.svg">
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="bluesky-icon" viewBox="0 0 16 17">
+    <g clip-path="url(#bluesky-clip)"><path fill="#08060d" d="M7.75 7.735c-.693-1.348-2.58-3.86-4.334-5.097-1.68-1.187-2.32-.981-2.74-.79C.188 2.065.1 2.812.1 3.251s.241 3.602.398 4.13c.52 1.744 2.367 2.333 4.07 2.145-2.495.37-4.71 1.278-1.805 4.512 3.196 3.309 4.38-.71 4.987-2.746.608 2.036 1.307 5.91 4.93 2.746 2.72-2.746.747-4.143-1.747-4.512 1.702.189 3.55-.4 4.07-2.145.156-.528.397-3.691.397-4.13s-.088-1.186-.575-1.406c-.42-.19-1.06-.395-2.741.79-1.755 1.24-3.64 3.752-4.334 5.099"/></g>
+    <defs><clipPath id="bluesky-clip"><path fill="#fff" d="M.1.85h15.3v15.3H.1z"/></clipPath></defs>
+  </symbol>
+  <symbol id="discord-icon" viewBox="0 0 20 19">
+    <path fill="#08060d" d="M16.224 3.768a14.5 14.5 0 0 0-3.67-1.153c-.158.286-.343.67-.47.976a13.5 13.5 0 0 0-4.067 0c-.128-.306-.317-.69-.476-.976A14.4 14.4 0 0 0 3.868 3.77C1.546 7.28.916 10.703 1.231 14.077a14.7 14.7 0 0 0 4.5 2.306q.545-.748.965-1.587a9.5 9.5 0 0 1-1.518-.74q.191-.14.372-.293c2.927 1.369 6.107 1.369 8.999 0q.183.152.372.294-.723.437-1.52.74.418.838.963 1.588a14.6 14.6 0 0 0 4.504-2.308c.37-3.911-.63-7.302-2.644-10.309m-9.13 8.234c-.878 0-1.599-.82-1.599-1.82 0-.998.705-1.82 1.6-1.82.894 0 1.614.82 1.599 1.82.001 1-.705 1.82-1.6 1.82m5.91 0c-.878 0-1.599-.82-1.599-1.82 0-.998.705-1.82 1.6-1.82.893 0 1.614.82 1.599 1.82 0 1-.706 1.82-1.6 1.82"/>
+  </symbol>
+  <symbol id="documentation-icon" viewBox="0 0 21 20">
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="m15.5 13.333 1.533 1.322c.645.555.967.833.967 1.178s-.322.623-.967 1.179L15.5 18.333m-3.333-5-1.534 1.322c-.644.555-.966.833-.966 1.178s.322.623.966 1.179l1.534 1.321"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M17.167 10.836v-4.32c0-1.41 0-2.117-.224-2.68-.359-.906-1.118-1.621-2.08-1.96-.599-.21-1.349-.21-2.848-.21-2.623 0-3.935 0-4.983.369-1.684.591-3.013 1.842-3.641 3.428C3 6.449 3 7.684 3 10.154v2.122c0 2.558 0 3.838.706 4.726q.306.383.713.671c.76.536 1.79.64 3.581.66"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M3 10a2.78 2.78 0 0 1 2.778-2.778c.555 0 1.209.097 1.748-.047.48-.129.854-.503.982-.982.145-.54.048-1.194.048-1.749a2.78 2.78 0 0 1 2.777-2.777"/>
+  </symbol>
+  <symbol id="github-icon" viewBox="0 0 19 19">
+    <path fill="#08060d" fill-rule="evenodd" d="M9.356 1.85C5.05 1.85 1.57 5.356 1.57 9.694a7.84 7.84 0 0 0 5.324 7.44c.387.079.528-.168.528-.376 0-.182-.013-.805-.013-1.454-2.165.467-2.616-.935-2.616-.935-.349-.91-.864-1.143-.864-1.143-.71-.48.051-.48.051-.48.787.051 1.2.805 1.2.805.695 1.194 1.817.857 2.268.649.064-.507.27-.857.49-1.052-1.728-.182-3.545-.857-3.545-3.87 0-.857.31-1.558.8-2.104-.078-.195-.349-1 .077-2.078 0 0 .657-.208 2.14.805a7.5 7.5 0 0 1 1.946-.26c.657 0 1.328.092 1.946.26 1.483-1.013 2.14-.805 2.14-.805.426 1.078.155 1.883.078 2.078.502.546.799 1.247.799 2.104 0 3.013-1.818 3.675-3.558 3.87.284.247.528.714.528 1.454 0 1.052-.012 1.896-.012 2.156 0 .208.142.455.528.377a7.84 7.84 0 0 0 5.324-7.441c.013-4.338-3.48-7.844-7.773-7.844" clip-rule="evenodd"/>
+  </symbol>
+  <symbol id="social-icon" viewBox="0 0 20 20">
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M12.5 6.667a4.167 4.167 0 1 0-8.334 0 4.167 4.167 0 0 0 8.334 0"/>
+    <path fill="none" stroke="#aa3bff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35" d="M2.5 16.667a5.833 5.833 0 0 1 8.75-5.053m3.837.474.513 1.035c.07.144.257.282.414.309l.93.155c.596.1.736.536.307.965l-.723.73a.64.64 0 0 0-.152.531l.207.903c.164.715-.213.991-.84.618l-.872-.52a.63.63 0 0 0-.577 0l-.872.52c-.624.373-1.003.094-.84-.618l.207-.903a.64.64 0 0 0-.152-.532l-.723-.729c-.426-.43-.289-.864.306-.964l.93-.156a.64.64 0 0 0 .412-.31l.513-1.034c.28-.562.735-.562 1.012 0"/>
+  </symbol>
+  <symbol id="x-icon" viewBox="0 0 19 19">
+    <path fill="#08060d" fill-rule="evenodd" d="M1.893 1.98c.052.072 1.245 1.769 2.653 3.77l2.892 4.114c.183.261.333.48.333.486s-.068.089-.152.183l-.522.593-.765.867-3.597 4.087c-.375.426-.734.834-.798.905a1 1 0 0 0-.118.148c0 .01.236.017.664.017h.663l.729-.83c.4-.457.796-.906.879-.999a692 692 0 0 0 1.794-2.038c.034-.037.301-.34.594-.675l.551-.624.345-.392a7 7 0 0 1 .34-.374c.006 0 .93 1.306 2.052 2.903l2.084 2.965.045.063h2.275c1.87 0 2.273-.003 2.266-.021-.008-.02-1.098-1.572-3.894-5.547-2.013-2.862-2.28-3.246-2.273-3.266.008-.019.282-.332 2.085-2.38l2-2.274 1.567-1.782c.022-.028-.016-.03-.65-.03h-.674l-.3.342a871 871 0 0 1-1.782 2.025c-.067.075-.405.458-.75.852a100 100 0 0 1-.803.91c-.148.172-.299.344-.99 1.127-.304.343-.32.358-.345.327-.015-.019-.904-1.282-1.976-2.808L6.365 1.85H1.8zm1.782.91 8.078 11.294c.772 1.08 1.413 1.973 1.425 1.984.016.017.241.02 1.05.017l1.03-.004-2.694-3.766L7.796 5.75 5.722 2.852l-1.039-.004-1.039-.004z" clip-rule="evenodd"/>
+  </symbol>
+</svg>
+</file>
+
+<file path="frontend/src/assets/react.svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+</file>
+
+<file path="frontend/src/assets/vite.svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="77" height="47" fill="none" aria-labelledby="vite-logo-title" viewBox="0 0 77 47"><title id="vite-logo-title">Vite</title><style>.parenthesis{fill:#000}@media (prefers-color-scheme:dark){.parenthesis{fill:#fff}}</style><path fill="#9135ff" d="M40.151 45.71c-.663.844-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.493c-.92 0-1.457-1.04-.92-1.788l7.479-10.471c1.07-1.498 0-3.578-1.842-3.578H15.443c-.92 0-1.456-1.04-.92-1.788l9.696-13.576c.213-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.472c-1.07 1.497 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.087.89 1.83L40.153 45.712z"/><mask id="a" width="48" height="47" x="14" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M40.047 45.71c-.663.843-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.389c-.92 0-1.457-1.04-.92-1.788l7.479-10.472c1.07-1.497 0-3.578-1.842-3.578H15.34c-.92 0-1.456-1.04-.92-1.788l9.696-13.575c.213-.297.556-.474.92-.474H53.93c.92 0 1.456 1.04.92 1.788L47.37 13.03c-1.07 1.498 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.088.89 1.831L40.049 45.712z"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#eee6ff" rx="5.508" ry="14.704" transform="rotate(269.814 20.96 11.29)scale(-1 1)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#eee6ff" rx="10.399" ry="29.851" transform="rotate(89.814 -16.902 -8.275)scale(1 -1)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#8900ff" rx="5.508" ry="30.487" transform="rotate(89.814 -19.197 -7.127)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.928 4.177)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.738 5.52)scale(1 -1)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#eee6ff" rx="14.072" ry="22.078" transform="rotate(93.35 31.245 55.578)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx="14.592" cy="9.743" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(39.51 14.592 9.743)"/></g><g filter="url(#k)"><ellipse cx="61.728" cy="-5.321" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 61.728 -5.32)"/></g><g filter="url(#l)"><ellipse cx="55.618" cy="7.104" fill="#00c2ff" rx="5.971" ry="9.665" transform="rotate(37.892 55.618 7.104)"/></g><g filter="url(#m)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#n)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#o)"><ellipse cx="49.857" cy="30.678" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 49.857 30.678)"/></g><g filter="url(#p)"><ellipse cx="52.623" cy="33.171" fill="#00c2ff" rx="5.971" ry="15.297" transform="rotate(37.892 52.623 33.17)"/></g></g><path d="M6.919 0c-9.198 13.166-9.252 33.575 0 46.789h6.215c-9.25-13.214-9.196-33.623 0-46.789zm62.424 0h-6.215c9.198 13.166 9.252 33.575 0 46.789h6.215c9.25-13.214 9.196-33.623 0-46.789" class="parenthesis"/><defs><filter id="b" width="60.045" height="41.654" x="-5.564" y="16.92" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-40.407" y="-6.762" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-35.435" y="2.801" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-30.84" y="20.8" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-29.307" y="21.949" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="29.961" y="-17.13" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-13.43" y="-22.082" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="34.321" y="-37.644" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="38.847" y="-10.552" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="22.45" y="-1.645" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="32.919" y="11.36" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter></defs></svg>
+</file>
+
+<file path="frontend/src/components/QrPanel/QrPanel.css">
+.qr {
+⋮----
+.qr__img {
+⋮----
+.qr__empty {
+</file>
+
+<file path="frontend/src/components/QrPanel/QrPanel.jsx">
+export default function QrPanel({
+  src,
+  alt = 'Payment QR code',
+  size = 156,
+  className = '',
+  style,
+})
+</file>
+
+<file path="frontend/src/components/Select/Select.css">
+.tf__select {
+⋮----
+.tf__select.is-placeholder {
+⋮----
+.tf__select option {
+⋮----
+.tf__chevron {
+⋮----
+.tf__field:focus-within .tf__chevron {
+⋮----
+.tf__field.is-invalid .tf__chevron {
+</file>
+
+<file path="frontend/src/components/Select/Select.jsx">
+function handleAnimationEnd(event)
+</file>
+
+<file path="frontend/src/components/DietPlan.jsx">
+const stagger = (ms) =>
+⋮----
+export default function DietPlan({ diet })
+</file>
+
+<file path="frontend/src/components/LogDetails.jsx">
+const stagger = (ms) =>
+⋮----
+function Divider({ delay = 0 })
+⋮----
+export default function LogDetails({ log })
+</file>
+
+<file path="frontend/src/components/LogListItem.jsx">
+export default function LogListItem({ log, selected, onSelect, index = 0 })
+</file>
+
+<file path="frontend/src/components/PlanCalendar.jsx">
+function Dot({ className })
+⋮----
+export default function PlanCalendar({ year, month, selected, todayIso, planFor, holidays, pending, onSelect, onPrev, onNext })
+</file>
+
+<file path="frontend/src/components/PlanDetails.jsx">
+const stagger = (ms) =>
+⋮----
+export default function PlanDetails({ dateIso, plan, holiday, request })
+</file>
+
+<file path="frontend/src/components/RescheduleForm.jsx">
+function Field({ label, children })
+⋮----
+export default function RescheduleForm({ sessions, selectedIso, todayIso, holidays, onSubmit })
+⋮----
+const set = (k) =>
+⋮----
+// Picking a session on the calendar pre-fills "Select Session"
+⋮----
+const submit = (e) =>
+</file>
+
+<file path="frontend/src/components/SectionCard.jsx">
+export default function SectionCard({ title, delay = 0, right, className = "", children })
+</file>
+
+<file path="frontend/src/components/Sidebar.jsx">
+export default function Sidebar()
+</file>
+
+<file path="frontend/src/components/StatusBadge.jsx">
+export default function StatusBadge({ status })
+</file>
+
+<file path="frontend/src/context/AuthContext.jsx">
+export function AuthProvider({ children })
+⋮----
+async function loginUser(credentials)
+⋮----
+async function registerUser(payload, { autoLogin = true } = {})
+⋮----
+function logoutUser()
+⋮----
+export function useAuth()
+</file>
+
+<file path="frontend/src/data/holidays.js">
+export async function fetchHolidays(year, country = "PH")
+</file>
+
+<file path="frontend/src/data/mockData.js">
+
+</file>
+
+<file path="frontend/src/data/workoutLogs.js">
+
+</file>
+
+<file path="frontend/src/data/workoutPlans.js">
+export const iso = (d) =>
+export const parseIso = (s) =>
+export const fmtDate = (s, opts = { weekday: "short", month: "short", day: "numeric" }) =>
+⋮----
+export function getPlan(dateIso)
+export const getDiet = (dateIso) =>
+</file>
+
+<file path="frontend/src/hooks/useDashboard.js">
+export function useDashboard(fetcher, id)
+</file>
+
+<file path="frontend/src/pages/Member/WorkoutLogPage.jsx">
+export default function WorkoutLogPage()
+</file>
+
+<file path="frontend/src/pages/Member/WorkoutPlanPage.jsx">
+export default function WorkoutPlanPage()
+⋮----
+const shift = (delta) =>
+⋮----
+const submitRequest = ({ session, ...req }) =>
+</file>
+
+<file path="frontend/src/pages/Registration/Registration.css">
+.reg {
+⋮----
+.reg__photo {
+⋮----
+.reg__photo-img {
+⋮----
+.reg__shade {
+⋮----
+.reg__title {
+⋮----
+.reg__content {
+⋮----
+.reg__body {
+⋮----
+.reg__col {
+⋮----
+.reg__col--left {
+⋮----
+.reg__col--right {
+⋮----
+.reg__heading {
+⋮----
+.reg__subheading {
+⋮----
+.reg__fields {
+⋮----
+.reg__row {
+⋮----
+.reg__row .tf__select {
+⋮----
+.reg__divider {
+⋮----
+.reg__qr-label {
+⋮----
+.reg__qr .qr {
+⋮----
+.reg__actions {
+⋮----
+.reg__status {
+⋮----
+.reg__status.is-open {
+⋮----
+.reg__status--success {
+⋮----
+.reg__status--error {
+⋮----
+.reg-reveal {
+⋮----
+@media (max-width: 1100px) {
+⋮----
+.reg__row {
+⋮----
+.reg__divider {
+⋮----
+.reg__qr .qr {
+⋮----
+@media (max-width: 860px) {
+⋮----
+.reg {
+⋮----
+.reg__photo-img {
+⋮----
+.reg__content {
+⋮----
+.reg__body {
+⋮----
+.reg__col--left,
+⋮----
+.reg__heading {
+⋮----
+.reg__subheading {
+⋮----
+.reg__row {
+⋮----
+.reg__divider {
+⋮----
+.reg__qr .qr {
+⋮----
+.reg__actions {
+⋮----
+.reg__actions .btn {
+⋮----
+.reg__status {
+⋮----
+@media (max-width: 480px) {
+⋮----
+.reg {
+⋮----
+.reg__row {
+⋮----
+@keyframes reg-rise {
+⋮----
+@keyframes reg-fade {
+</file>
+
+<file path="frontend/src/pages/RegistrationDetails/RegistrationDetails.css">
+.regd {
+⋮----
+.regd__photo {
+⋮----
+.regd__photo-img {
+⋮----
+.regd__shade {
+⋮----
+.regd__title {
+⋮----
+.regd__content {
+⋮----
+.regd__body {
+⋮----
+.regd__col {
+⋮----
+.regd__col--left {
+⋮----
+.regd__col--right {
+⋮----
+.regd__heading {
+⋮----
+.regd__subheading {
+⋮----
+.regd__fields {
+⋮----
+.regd__row {
+⋮----
+.regd__row .tf__select {
+⋮----
+.regd__divider {
+⋮----
+.regd__qr-label {
+⋮----
+.regd__qr .qr {
+⋮----
+.regd__actions {
+⋮----
+.regd__status {
+⋮----
+.regd__status.is-open {
+⋮----
+.regd__status--success {
+⋮----
+.regd__status--error {
+⋮----
+.regd-reveal {
+⋮----
+@media (max-width: 1100px) {
+⋮----
+.regd__row {
+⋮----
+.regd__divider {
+⋮----
+.regd__qr .qr {
+⋮----
+@media (max-width: 860px) {
+⋮----
+.regd {
+⋮----
+.regd__photo-img {
+⋮----
+.regd__content {
+⋮----
+.regd__body {
+⋮----
+.regd__col--left,
+⋮----
+.regd__heading {
+⋮----
+.regd__subheading {
+⋮----
+.regd__row {
+⋮----
+.regd__divider {
+⋮----
+.regd__qr .qr {
+⋮----
+.regd__actions {
+⋮----
+.regd__actions .btn {
+⋮----
+.regd__status {
+⋮----
+@media (max-width: 480px) {
+⋮----
+.regd {
+⋮----
+.regd__row {
+⋮----
+@keyframes regd-rise {
+⋮----
+@keyframes regd-fade {
+</file>
+
+<file path="frontend/src/pages/TrainerDetails/TrainerDetails.css">
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Oswald:wght@600&family=Goudy+Bookletter+1911&family=Google+Sans+Code:wght@700&display=swap');
+⋮----
+.trdt {
+⋮----
+.trdt,
+⋮----
+:where(.trdt) h1,
+⋮----
+:where(.trdt) ul {
+⋮----
+:where(.trdt) a {
+⋮----
+:where(.trdt) img,
+⋮----
+@keyframes trdt-rise {
+⋮----
+@keyframes trdt-fade {
+⋮----
+.trdt-reveal {
+⋮----
+.trdt__bg {
+⋮----
+.trdt__bg-img {
+⋮----
+.trdt__veil {
+⋮----
+.trdt__side {
+⋮----
+.trdt__brand {
+⋮----
+.trdt__emblem {
+⋮----
+.trdt__brand-name {
+⋮----
+.trdt__tagline {
+⋮----
+.trdt__nav {
+⋮----
+.trdt__nav-link {
+⋮----
+.trdt__nav-icon {
+⋮----
+.trdt__nav-link:hover {
+⋮----
+.trdt__nav-link:hover .trdt__nav-icon {
+⋮----
+.trdt__nav-link.is-active {
+⋮----
+.trdt__nav-link.is-active .trdt__nav-icon {
+⋮----
+.trdt__nav-link:focus-visible,
+⋮----
+.trdt__side-foot {
+⋮----
+.trdt__side-foot::before {
+⋮----
+.trdt__logout {
+⋮----
+gap: 3px; /* Figma: 18px icon, label at x 72 */
+⋮----
+/* ---- Main column --------------------------------------------------------- */
+⋮----
+.trdt__main {
+⋮----
+/* Figma: top bar y 23 → 100 */
+.trdt__header {
+⋮----
+.trdt__crumb {
+⋮----
+.trdt__crumb-icon {
+⋮----
+.trdt__crumb-divider {
+⋮----
+.trdt__crumb-label {
+⋮----
+/* Profile pill (Figma: 235 × 77, radius 50) */
+.trdt__user {
+⋮----
+margin-right: -6px; /* Figma: pill ends 6px past the card's right edge */
+⋮----
+.trdt__bell {
+⋮----
+.trdt__bell:hover {
+⋮----
+.trdt__user-divider {
+⋮----
+.trdt__avatar {
+⋮----
+.trdt__user-name {
+⋮----
+.trdt__welcome {
+⋮----
+.trdt__welcome-name {
+⋮----
+.trdt__card {
+⋮----
+.trdt__card-title {
+⋮----
+.trdt__rule {
+⋮----
+.trdt__body {
+⋮----
+.trdt__photo {
+⋮----
+.trdt__photo-img {
+⋮----
+.trdt__info {
+⋮----
+.trdt__name {
+⋮----
+.trdt__facts {
+⋮----
+.trdt__fact {
+⋮----
+.trdt__fact dt,
+⋮----
+.trdt__fact--message {
+⋮----
+.trdt__actions {
+⋮----
+.trdt__button {
+⋮----
+.trdt__button:hover {
+⋮----
+.trdt__button:active {
+⋮----
+@media (max-width: 1100px) {
+⋮----
+.trdt {
+⋮----
+.trdt__body {
+⋮----
+@media (max-width: 900px) {
+⋮----
+.trdt {
+⋮----
+.trdt__side {
+⋮----
+.trdt__brand {
+⋮----
+.trdt__emblem {
+⋮----
+.trdt__brand-name {
+⋮----
+.trdt__tagline {
+⋮----
+.trdt__nav {
+⋮----
+.trdt__nav::-webkit-scrollbar {
+⋮----
+.trdt__nav-list {
+⋮----
+.trdt__nav-link {
+⋮----
+.trdt__nav-link.is-active {
+⋮----
+.trdt__side-foot {
+⋮----
+.trdt__side-foot::before {
+⋮----
+.trdt__logout {
+⋮----
+.trdt__main {
+⋮----
+.trdt__welcome {
+⋮----
+.trdt__crumb {
+⋮----
+.trdt__card {
+⋮----
+.trdt__body {
+⋮----
+.trdt__photo {
+⋮----
+.trdt__info {
+⋮----
+.trdt__name {
+⋮----
+.trdt__facts {
+⋮----
+.trdt__actions {
+⋮----
+@media (max-width: 560px) {
+⋮----
+.trdt__header {
+⋮----
+.trdt__user {
+⋮----
+.trdt__user-divider {
+⋮----
+.trdt__avatar {
+⋮----
+.trdt__user-name {
+⋮----
+.trdt__crumb {
+⋮----
+.trdt__welcome {
+⋮----
+.trdt__button {
+⋮----
+@media (max-width: 380px) {
+⋮----
+.trdt__user-name {
+⋮----
+.trdt__user {
+⋮----
+@media (prefers-reduced-motion: reduce) {
+⋮----
+.trdt-reveal,
+⋮----
+.trdt__nav-link,
+⋮----
+.trdt__nav-link:hover .trdt__nav-icon,
+</file>
+
+<file path="frontend/src/pages/TrainerDetails/TrainerDetails.jsx">
+function Svg({ children, size = 21, fill = 'none', strokeWidth = 1.7, className })
+⋮----
+function TrainerGlyph({ size })
+⋮----
+function BellIcon()
+⋮----
+function isPlainLeftClick(event)
+⋮----
+export default function TrainerDetails({
+  trainer,
+  photoSrc = '/assets/trainer-photo.png',
+  backgroundSrc = '/assets/trainer-bg.png',
+  memberName = 'Dela Cruz, Juan',
+  welcomeName = 'Juan',
+  routes,
+  onNavigate,
+  onLogout,
+  onViewSchedule,
+})
+⋮----
+function go(event, path)
+⋮----
+function handleLogout(event)
+</file>
+
+<file path="frontend/src/services/api.js">
+export async function apiFetch(endpoint, options = {})
+</file>
+
+<file path="frontend/src/services/dashboardService.js">
+async function request(path)
+⋮----
+getMemberDashboard(memberId)
+⋮----
+getTrainerDashboard(trainerId)
+</file>
+
+<file path="frontend/src/services/registration.js">
+export async function submitRegistration(payload)
+</file>
+
+<file path="frontend/src/services/registrationDetails.js">
+export async function submitRegistrationDetails(payload)
+</file>
+
+<file path="frontend/src/Styles/global.css">
+:root {
+⋮----
+*,
+⋮----
+html {
+⋮----
+body {
+⋮----
+img,
+⋮----
+button,
+⋮----
+:focus-visible {
+⋮----
+.sr-only {
+⋮----
+@media (prefers-reduced-motion: reduce) {
+⋮----
+*,
+</file>
+
+<file path="frontend/src/App.css">
+.counter {
+⋮----
+&:hover {
+&:focus-visible {
+⋮----
+.hero {
+⋮----
+.base,
+⋮----
+.base {
+⋮----
+.framework,
+⋮----
+.framework {
+⋮----
+.vite {
+⋮----
+#center {
+⋮----
+@media (max-width: 1024px) {
+⋮----
+#next-steps {
+⋮----
+& > div {
+⋮----
+@media (max-width: 1024px) {
+⋮----
+.icon {
+⋮----
+@media (max-width: 1024px) {
+⋮----
+#docs {
+⋮----
+@media (max-width: 1024px) {
+⋮----
+#next-steps ul {
+⋮----
+.logo {
+⋮----
+a {
+⋮----
+&:hover {
+.button-icon {
+⋮----
+@media (max-width: 1024px) {
+⋮----
+li {
+⋮----
+a {
+⋮----
+#spacer {
+⋮----
+@media (max-width: 1024px) {
+⋮----
+.ticks {
+⋮----
+&::before,
+⋮----
+&::before {
+&::after {
+</file>
+
+<file path="frontend/.gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+</file>
+
+<file path="frontend/eslint.config.js">
+
+</file>
+
+<file path="frontend/README.md">
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+</file>
+
+<file path="frontend/vite.config.js">
+
+</file>
+
+<file path=".gitignore">
+# IntelliJ / Mac / Windows
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Backend (Maven)
+backend/target/
+
+# Frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/controller/AuthController.java">
+package com.fittrack.backend.controller;
+import com.fittrack.backend.model.*;
+⋮----
+import com.fittrack.backend.repository.DataStore;
+import org.apache.coyote.Response;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+⋮----
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Period;
+import java.util.Map;
+import java.util.UUID;
+⋮----
+public class AuthController {
+⋮----
+public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+⋮----
+public ResponseEntity<?> checkEmail(@RequestBody CheckEmailRequest req) {
+⋮----
+public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+⋮----
+private AuthResponse toResponse(User u) {
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/dto/DashboardResponse.java">
+package com.fittrack.backend.dto;
+⋮----
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/service/DashboardService.java">
+package com.fittrack.backend.service;
+⋮----
+import com.fittrack.backend.dto.DashboardResponse;
+import com.fittrack.backend.dto.DashboardResponse.*;
+import com.fittrack.backend.model.*;
+import com.fittrack.backend.repository.DataStore;
+import org.springframework.stereotype.Service;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+⋮----
+public class DashboardService {
+⋮----
+private final DataStore store = DataStore.getInstance();
+⋮----
+public Optional<DashboardResponse> build(String memberId) {
+⋮----
+private Membership latestMembership(String memberId) {
+⋮----
+private MembershipCard toMembershipCard(Membership m) {
+⋮----
+private List<PlanOption> buildPlans(Membership current) {
+⋮----
+private List<BillingItem> buildBilling(String memberId) {
+⋮----
+public List<WorkoutLogItem> allWorkouts(String memberId) {
+⋮----
+private UpcomingSession buildUpcoming(String memberId, LocalDate today) {
+⋮----
+private List<WorkoutLogItem> buildRecentWorkouts(String memberId, LocalDate today) {
+⋮----
+private List<BodyMetric> sortedMetrics(String memberId) {
+⋮----
+private List<ProgressPoint> buildProgress(String memberId) {
+⋮----
+private BodyStats buildBodyStats(Member member) {
+⋮----
+private List<NotificationItem> buildNotifications(String memberId) {
+⋮----
+private TrainerCard buildTrainer(Member member) {
+</file>
+
+<file path="frontend/src/components/AuthButton.jsx">
+export default function AuthButtons()
+</file>
+
+<file path="frontend/src/components/Button.jsx">
+export default function Button({ to, variant = "solid", size = "sm", className = "", children, ...props })
+</file>
+
+<file path="frontend/src/components/Features.js">
+
+</file>
+
+<file path="frontend/src/components/FeaturStrip.jsx">
+export default function FeatureStrip({ features, className = "" })
+</file>
+
+<file path="frontend/src/components/Hero.jsx">
+export default function Hero({ image = "/assets/hero-gym.png", className = "", children })
+</file>
+
+<file path="frontend/src/components/MemberDashComp.jsx">
+const Svg = ({ size = 20, children, ...props }) =>
+⋮----
+Home: (p) =>
+Sparkle: (p) =>
+UserCircle: (p) =>
+Dumbbell: (p) =>
+Clipboard: (p) =>
+TrendUp: (p) =>
+Gear: (p) =>
+Logout: (p) =>
+Bell: (p) =>
+ChevronDown: (p) =>
+GraphUp: (p) =>
+⋮----
+export function Card({ className = "", hover = true, children, ...props })
+⋮----
+export function CardTitle({ children, className = "", rule = true })
+⋮----
+export function PillButton({
+                               variant = "solid",
+                               size = "md",
+                               to,
+                               href,
+                               className = "",
+                               children,
+                               ...props
+                           })
+⋮----
+export function StatusBadge({ status = "completed", children, className = "" })
+⋮----
+/* ------------------------------------------------------------------ */
+/* Progress bar                                                        */
+/* ------------------------------------------------------------------ */
+export function ProgressBar({ value = 0 })
+⋮----
+/* ------------------------------------------------------------------ */
+/* Stat card (Current weight, Body fat, ...)                           */
+/* ------------------------------------------------------------------ */
+export function StatCard({ label, value, unit, decimals = 1, delay = 0 })
+⋮----
+export function WorkoutLogItem({ title, meta, status, delay = 0 })
+⋮----
+export function UpdateItem({ title, date, delay = 0 })
+⋮----
+export function Logo({ compact = false })
+⋮----
+export function SidebarNavItem({ icon: IconComp, label, href = "#", active = false, delay = 0 })
+⋮----
+export function Sidebar({ items, onLogout })
+⋮----
+export function Breadcrumb({ label })
+⋮----
+export function ProfilePill({ name, avatarSrc })
+⋮----
+function useAcceleratingProgress({ duration = 3200, delay = 700, power = 2.2 } = {})
+⋮----
+const tick = (now) =>
+⋮----
+export function LineChart({
+                              data,
+                              xTicks,
+                              yTicks,
+                              yLabel,
+                              highlightLabel,
+                              duration = 3200,
+                              delay = 700,
+                          })
+⋮----
+const sx = (x) =>
+const sy = (y) =>
+</file>
+
+<file path="frontend/src/components/MemberLayout.jsx">
+export default function MemberLayout({ pageTitle, PageIcon = ClipboardList, userName = "Dela Cruz, Juan", firstName = "Juan", children })
+</file>
+
+<file path="frontend/src/components/Membership.js">
+
+</file>
+
+<file path="frontend/src/components/MembershipCard.jsx">
+export default function MembershipCard({ name, price, period = "month", inclusions, card, pill })
+</file>
+
+<file path="frontend/src/components/MembershipTier.jsx">
+export default function MembershipTiers({ tiers, title = "Membership Types:", className = "" })
+</file>
+
+<file path="frontend/src/components/Navbar.jsx">
+export default function Navbar({ children, className = "" })
+</file>
+
+<file path="frontend/src/components/Panel.jsx">
+export default function Panel({ className = "", children, as: Tag = "div" })
+</file>
+
+<file path="frontend/src/pages/Registration/Registration.jsx">
+function getErrors(values)
+⋮----
+weight: validateWeightKg(values.weight), // optional
+height: validateHeightM(values.height), // optional
+⋮----
+/**
+ * Splits "LastName, FirstName Middle" or "FirstName LastName" into separate strings.
+ */
+function splitFullName(fullName = '')
+⋮----
+export default function Registration({
+  qrSrc = '/assets/payment-qr.png',
+  referenceNumber: initialReference = '',
+  onProceed,
+})
+⋮----
+// Retrieve deferred credentials from step 1 (/register)
+⋮----
+// If user accesses /register/details directly without credentials, bounce to /register
+⋮----
+const visibleError = (field) =>
+const isValid = (field) =>
+⋮----
+function handleChange(event)
+⋮----
+function handleBlur(event)
+⋮----
+async function handleSubmit(event)
+⋮----
+const reveal = (index) =>
+</file>
+
+<file path="frontend/src/pages/RegistrationDetails/RegistrationDetails.jsx">
+function getErrors(values)
+⋮----
+/**
+ * Splits "LastName, FirstName MiddleName" or "FirstName LastName"
+ */
+function splitFullName(fullName = '')
+⋮----
+export default function RegistrationDetails({
+  qrSrc = '/assets/payment-qr.png',
+  referenceNumber: initialReference = '',
+  onProceed,
+})
+⋮----
+// Retrieve credentials passed from step 1
+⋮----
+// Protect route: redirect to step 1 if email or password are missing
+⋮----
+const visibleError = (field) =>
+const isValid = (field) =>
+⋮----
+function handleChange(event)
+⋮----
+function handleBlur(event)
+⋮----
+async function handleSubmit(event)
+⋮----
+const reveal = (index) =>
+</file>
+
+<file path="frontend/src/pages/LandingPage.jsx">
+export default function LandingPage()
+</file>
+
+<file path="frontend/src/services/authService.js">
+async function requestAuth(path, payload)
+⋮----
+export function login({ email, password, role })
+⋮----
+export async function checkEmail(email)
+⋮----
+export function register(payload)
+</file>
+
+<file path="frontend/src/Styles/Animations.jsx">
+export function AnimationStyles()
+⋮----
+export function Animate({
+                            as: Tag = "div",
+                            type = "up",
+                            delay,
+                            className = "",
+                            style,
+                            children,
+                            ...props
+                        })
+⋮----
+/**
+ * Animates a number from 0 to `value` when it first appears.
+ *
+ *   <CountUp value={78.4} decimals={1} />
+ */
+export function CountUp({ value, decimals = 0, duration = 1200, delay = 300 })
+⋮----
+const tick = (now) =>
+</file>
+
+<file path="backend/.mvn/wrapper/maven-wrapper.properties">
+wrapperVersion=3.3.4
+distributionType=only-script
+distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.10.1/apache-maven-3.10.1-bin.zip
+</file>
+
+<file path="backend/src/main/java/com/fittrack/backend/BackendApplication.java">
+package com.fittrack.backend;
+⋮----
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+⋮----
+public class BackendApplication {
+⋮----
+public static void main(String[] args) {
+</file>
+
+<file path="backend/src/main/resources/application.properties">
+spring.application.name=backend
+</file>
+
+<file path="backend/src/test/java/com/fittrack/backend/BackendApplicationTests.java">
+package com.fittrack.backend;
+⋮----
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+⋮----
+class BackendApplicationTests {
+⋮----
+void contextLoads() {
+</file>
+
+<file path="backend/.gitattributes">
+/mvnw text eol=lf
+*.cmd text eol=crlf
+</file>
+
+<file path="backend/.gitignore">
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+</file>
+
+<file path="backend/CorsConfig.java">
+package com.fittrack.backend.config;
+⋮----
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+⋮----
+public class CorsConfig implements WebMvcConfigurer {
+⋮----
+public void addCorsMappings(CorsRegistry registry) {
+</file>
+
+<file path="backend/mvnw">
+#!/bin/sh
+# ----------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# Apache Maven Wrapper startup batch script, version 3.3.4
+#
+# Optional ENV vars
+# -----------------
+#   JAVA_HOME - location of a JDK home dir, required when download maven via java source
+#   MVNW_REPOURL - repo url base for downloading maven distribution
+#   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
+#   MVNW_VERBOSE - true: enable verbose log; debug: trace the mvnw script; others: silence the output
+# ----------------------------------------------------------------------------
+
+set -euf
+[ "${MVNW_VERBOSE-}" != debug ] || set -x
+
+# OS specific support.
+native_path() { printf %s\\n "$1"; }
+case "$(uname)" in
+CYGWIN* | MINGW*)
+  [ -z "${JAVA_HOME-}" ] || JAVA_HOME="$(cygpath --unix "$JAVA_HOME")"
+  native_path() { cygpath --path --windows "$1"; }
+  ;;
+esac
+
+# set JAVACMD and JAVACCMD
+set_java_home() {
+  # For Cygwin and MinGW, ensure paths are in Unix format before anything is touched
+  if [ -n "${JAVA_HOME-}" ]; then
+    if [ -x "$JAVA_HOME/jre/sh/java" ]; then
+      # IBM's JDK on AIX uses strange locations for the executables
+      JAVACMD="$JAVA_HOME/jre/sh/java"
+      JAVACCMD="$JAVA_HOME/jre/sh/javac"
+    else
+      JAVACMD="$JAVA_HOME/bin/java"
+      JAVACCMD="$JAVA_HOME/bin/javac"
+
+      if [ ! -x "$JAVACMD" ] || [ ! -x "$JAVACCMD" ]; then
+        echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
+        echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"\$JAVA_HOME/bin/java\" or \"\$JAVA_HOME/bin/javac\" does not exist." >&2
+        return 1
+      fi
+    fi
+  else
+    JAVACMD="$(
+      'set' +e
+      'unset' -f command 2>/dev/null
+      'command' -v java
+    )" || :
+    JAVACCMD="$(
+      'set' +e
+      'unset' -f command 2>/dev/null
+      'command' -v javac
+    )" || :
+
+    if [ ! -x "${JAVACMD-}" ] || [ ! -x "${JAVACCMD-}" ]; then
+      echo "The java/javac command does not exist in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
+      return 1
+    fi
+  fi
+}
+
+# hash string like Java String::hashCode
+hash_string() {
+  str="${1:-}" h=0
+  while [ -n "$str" ]; do
+    char="${str%"${str#?}"}"
+    h=$(((h * 31 + $(LC_CTYPE=C printf %d "'$char")) % 4294967296))
+    str="${str#?}"
+  done
+  printf %x\\n $h
+}
+
+verbose() { :; }
+[ "${MVNW_VERBOSE-}" != true ] || verbose() { printf %s\\n "${1-}"; }
+
+die() {
+  printf %s\\n "$1" >&2
+  exit 1
+}
+
+trim() {
+  # MWRAPPER-139:
+  #   Trims trailing and leading whitespace, carriage returns, tabs, and linefeeds.
+  #   Needed for removing poorly interpreted newline sequences when running in more
+  #   exotic environments such as mingw bash on Windows.
+  printf "%s" "${1}" | tr -d '[:space:]'
+}
+
+scriptDir="$(dirname "$0")"
+scriptName="$(basename "$0")"
+
+# parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
+while IFS="=" read -r key value; do
+  case "${key-}" in
+  distributionUrl) distributionUrl=$(trim "${value-}") ;;
+  distributionSha256Sum) distributionSha256Sum=$(trim "${value-}") ;;
+  esac
+done <"$scriptDir/.mvn/wrapper/maven-wrapper.properties"
+[ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
+
+case "${distributionUrl##*/}" in
+maven-mvnd-*bin.*)
+  MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/
+  case "${PROCESSOR_ARCHITECTURE-}${PROCESSOR_ARCHITEW6432-}:$(uname -a)" in
+  *AMD64:CYGWIN* | *AMD64:MINGW*) distributionPlatform=windows-amd64 ;;
+  :Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
+  :Darwin*arm64) distributionPlatform=darwin-aarch64 ;;
+  :Linux*x86_64*) distributionPlatform=linux-amd64 ;;
+  *)
+    echo "Cannot detect native platform for mvnd on $(uname)-$(uname -m), use pure java version" >&2
+    distributionPlatform=linux-amd64
+    ;;
+  esac
+  distributionUrl="${distributionUrl%-bin.*}-$distributionPlatform.zip"
+  ;;
+maven-mvnd-*) MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/ ;;
+*) MVN_CMD="mvn${scriptName#mvnw}" _MVNW_REPO_PATTERN=/org/apache/maven/ ;;
+esac
+
+# apply MVNW_REPOURL and calculate MAVEN_HOME
+# maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+[ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL$_MVNW_REPO_PATTERN${distributionUrl#*"$_MVNW_REPO_PATTERN"}"
+distributionUrlName="${distributionUrl##*/}"
+distributionUrlNameMain="${distributionUrlName%.*}"
+distributionUrlNameMain="${distributionUrlNameMain%-bin}"
+MAVEN_USER_HOME="${MAVEN_USER_HOME:-${HOME}/.m2}"
+MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
+
+exec_maven() {
+  unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
+  exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
+}
+
+if [ -d "$MAVEN_HOME" ]; then
+  verbose "found existing MAVEN_HOME at $MAVEN_HOME"
+  exec_maven "$@"
+fi
+
+case "${distributionUrl-}" in
+*?-bin.zip | *?maven-mvnd-?*-?*.zip) ;;
+*) die "distributionUrl is not valid, must match *-bin.zip or maven-mvnd-*.zip, but found '${distributionUrl-}'" ;;
+esac
+
+# prepare tmp dir
+if TMP_DOWNLOAD_DIR="$(mktemp -d)" && [ -d "$TMP_DOWNLOAD_DIR" ]; then
+  clean() { rm -rf -- "$TMP_DOWNLOAD_DIR"; }
+  trap clean HUP INT TERM EXIT
+else
+  die "cannot create temp dir"
+fi
+
+mkdir -p -- "${MAVEN_HOME%/*}"
+
+# Download and Install Apache Maven
+verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
+verbose "Downloading from: $distributionUrl"
+verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
+
+# select .zip or .tar.gz
+if ! command -v unzip >/dev/null; then
+  distributionUrl="${distributionUrl%.zip}.tar.gz"
+  distributionUrlName="${distributionUrl##*/}"
+fi
+
+# verbose opt
+__MVNW_QUIET_WGET=--quiet __MVNW_QUIET_CURL=--silent __MVNW_QUIET_UNZIP=-q __MVNW_QUIET_TAR=''
+[ "${MVNW_VERBOSE-}" != true ] || __MVNW_QUIET_WGET='' __MVNW_QUIET_CURL='' __MVNW_QUIET_UNZIP='' __MVNW_QUIET_TAR=v
+
+# normalize http auth
+case "${MVNW_PASSWORD:+has-password}" in
+'') MVNW_USERNAME='' MVNW_PASSWORD='' ;;
+has-password) [ -n "${MVNW_USERNAME-}" ] || MVNW_USERNAME='' MVNW_PASSWORD='' ;;
+esac
+
+if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
+  verbose "Found wget ... using wget"
+  wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName" || die "wget: Failed to fetch $distributionUrl"
+elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
+  verbose "Found curl ... using curl"
+  curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} -f -L -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" || die "curl: Failed to fetch $distributionUrl"
+elif set_java_home; then
+  verbose "Falling back to use Java to download"
+  javaSource="$TMP_DOWNLOAD_DIR/Downloader.java"
+  targetZip="$TMP_DOWNLOAD_DIR/$distributionUrlName"
+  cat >"$javaSource" <<-END
+	public class Downloader extends java.net.Authenticator
+	{
+	  protected java.net.PasswordAuthentication getPasswordAuthentication()
+	  {
+	    return new java.net.PasswordAuthentication( System.getenv( "MVNW_USERNAME" ), System.getenv( "MVNW_PASSWORD" ).toCharArray() );
+	  }
+	  public static void main( String[] args ) throws Exception
+	  {
+	    setDefault( new Downloader() );
+	    java.nio.file.Files.copy( java.net.URI.create( args[0] ).toURL().openStream(), java.nio.file.Paths.get( args[1] ).toAbsolutePath().normalize() );
+	  }
+	}
+	END
+  # For Cygwin/MinGW, switch paths to Windows format before running javac and java
+  verbose " - Compiling Downloader.java ..."
+  "$(native_path "$JAVACCMD")" "$(native_path "$javaSource")" || die "Failed to compile Downloader.java"
+  verbose " - Running Downloader.java ..."
+  "$(native_path "$JAVACMD")" -cp "$(native_path "$TMP_DOWNLOAD_DIR")" Downloader "$distributionUrl" "$(native_path "$targetZip")"
+fi
+
+# If specified, validate the SHA-256 sum of the Maven distribution zip file
+if [ -n "${distributionSha256Sum-}" ]; then
+  distributionSha256Result=false
+  if [ "$MVN_CMD" = mvnd.sh ]; then
+    echo "Checksum validation is not supported for maven-mvnd." >&2
+    echo "Please disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
+    exit 1
+  elif command -v sha256sum >/dev/null; then
+    if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | sha256sum -c - >/dev/null 2>&1; then
+      distributionSha256Result=true
+    fi
+  elif command -v shasum >/dev/null; then
+    if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | shasum -a 256 -c >/dev/null 2>&1; then
+      distributionSha256Result=true
+    fi
+  else
+    echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available." >&2
+    echo "Please install either command, or disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
+    exit 1
+  fi
+  if [ $distributionSha256Result = false ]; then
+    echo "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised." >&2
+    echo "If you updated your Maven version, you need to update the specified distributionSha256Sum property." >&2
+    exit 1
+  fi
+fi
+
+# unzip and move
+if command -v unzip >/dev/null; then
+  unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -d "$TMP_DOWNLOAD_DIR" || die "failed to unzip"
+else
+  tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -C "$TMP_DOWNLOAD_DIR" || die "failed to untar"
+fi
+
+# Find the actual extracted directory name (handles snapshots where filename != directory name)
+actualDistributionDir=""
+
+# First try the expected directory name (for regular distributions)
+if [ -d "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain" ]; then
+  if [ -f "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain/bin/$MVN_CMD" ]; then
+    actualDistributionDir="$distributionUrlNameMain"
+  fi
+fi
+
+# If not found, search for any directory with the Maven executable (for snapshots)
+if [ -z "$actualDistributionDir" ]; then
+  # enable globbing to iterate over items
+  set +f
+  for dir in "$TMP_DOWNLOAD_DIR"/*; do
+    if [ -d "$dir" ]; then
+      if [ -f "$dir/bin/$MVN_CMD" ]; then
+        actualDistributionDir="$(basename "$dir")"
+        break
+      fi
+    fi
+  done
+  set -f
+fi
+
+if [ -z "$actualDistributionDir" ]; then
+  verbose "Contents of $TMP_DOWNLOAD_DIR:"
+  verbose "$(ls -la "$TMP_DOWNLOAD_DIR")"
+  die "Could not find Maven distribution directory in extracted archive"
+fi
+
+verbose "Found extracted Maven distribution directory: $actualDistributionDir"
+printf %s\\n "$distributionUrl" >"$TMP_DOWNLOAD_DIR/$actualDistributionDir/mvnw.url"
+mv -- "$TMP_DOWNLOAD_DIR/$actualDistributionDir" "$MAVEN_HOME" || [ -d "$MAVEN_HOME" ] || die "fail to move MAVEN_HOME"
+
+clean || :
+exec_maven "$@"
+</file>
+
+<file path="backend/mvnw.cmd">
+<# : batch portion
+@REM ----------------------------------------------------------------------------
+@REM Licensed to the Apache Software Foundation (ASF) under one
+@REM or more contributor license agreements.  See the NOTICE file
+@REM distributed with this work for additional information
+@REM regarding copyright ownership.  The ASF licenses this file
+@REM to you under the Apache License, Version 2.0 (the
+@REM "License"); you may not use this file except in compliance
+@REM with the License.  You may obtain a copy of the License at
+@REM
+@REM    http://www.apache.org/licenses/LICENSE-2.0
+@REM
+@REM Unless required by applicable law or agreed to in writing,
+@REM software distributed under the License is distributed on an
+@REM "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+@REM KIND, either express or implied.  See the License for the
+@REM specific language governing permissions and limitations
+@REM under the License.
+@REM ----------------------------------------------------------------------------
+
+@REM ----------------------------------------------------------------------------
+@REM Apache Maven Wrapper startup batch script, version 3.3.4
+@REM
+@REM Optional ENV vars
+@REM   MVNW_REPOURL - repo url base for downloading maven distribution
+@REM   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
+@REM   MVNW_VERBOSE - true: enable verbose log; others: silence the output
+@REM ----------------------------------------------------------------------------
+
+@IF "%__MVNW_ARG0_NAME__%"=="" (SET __MVNW_ARG0_NAME__=%~nx0)
+@SET __MVNW_CMD__=
+@SET __MVNW_ERROR__=
+@SET __MVNW_PSMODULEP_SAVE=%PSModulePath%
+@SET PSModulePath=
+@FOR /F "usebackq tokens=1* delims==" %%A IN (`powershell -noprofile "& {$scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; icm -ScriptBlock ([Scriptblock]::Create((Get-Content -Raw '%~f0'))) -NoNewScope}"`) DO @(
+  IF "%%A"=="MVN_CMD" (set __MVNW_CMD__=%%B) ELSE IF "%%B"=="" (echo %%A) ELSE (echo %%A=%%B)
+)
+@SET PSModulePath=%__MVNW_PSMODULEP_SAVE%
+@SET __MVNW_PSMODULEP_SAVE=
+@SET __MVNW_ARG0_NAME__=
+@SET MVNW_USERNAME=
+@SET MVNW_PASSWORD=
+@IF NOT "%__MVNW_CMD__%"=="" ("%__MVNW_CMD__%" %*)
+@echo Cannot start maven from wrapper >&2 && exit /b 1
+@GOTO :EOF
+: end batch / begin powershell #>
+
+$ErrorActionPreference = "Stop"
+if ($env:MVNW_VERBOSE -eq "true") {
+  $VerbosePreference = "Continue"
+}
+
+# calculate distributionUrl, requires .mvn/wrapper/maven-wrapper.properties
+$distributionUrl = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionUrl
+if (!$distributionUrl) {
+  Write-Error "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
+}
+
+switch -wildcard -casesensitive ( $($distributionUrl -replace '^.*/','') ) {
+  "maven-mvnd-*" {
+    $USE_MVND = $true
+    $distributionUrl = $distributionUrl -replace '-bin\.[^.]*$',"-windows-amd64.zip"
+    $MVN_CMD = "mvnd.cmd"
+    break
+  }
+  default {
+    $USE_MVND = $false
+    $MVN_CMD = $script -replace '^mvnw','mvn'
+    break
+  }
+}
+
+# apply MVNW_REPOURL and calculate MAVEN_HOME
+# maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+if ($env:MVNW_REPOURL) {
+  $MVNW_REPO_PATTERN = if ($USE_MVND -eq $False) { "/org/apache/maven/" } else { "/maven/mvnd/" }
+  $distributionUrl = "$env:MVNW_REPOURL$MVNW_REPO_PATTERN$($distributionUrl -replace "^.*$MVNW_REPO_PATTERN",'')"
+}
+$distributionUrlName = $distributionUrl -replace '^.*/',''
+$distributionUrlNameMain = $distributionUrlName -replace '\.[^.]*$','' -replace '-bin$',''
+
+$MAVEN_M2_PATH = "$HOME/.m2"
+if ($env:MAVEN_USER_HOME) {
+  $MAVEN_M2_PATH = "$env:MAVEN_USER_HOME"
+}
+
+if (-not (Test-Path -Path $MAVEN_M2_PATH)) {
+    New-Item -Path $MAVEN_M2_PATH -ItemType Directory | Out-Null
+}
+
+$MAVEN_WRAPPER_DISTS = $null
+if ((Get-Item $MAVEN_M2_PATH).Target[0] -eq $null) {
+  $MAVEN_WRAPPER_DISTS = "$MAVEN_M2_PATH/wrapper/dists"
+} else {
+  $MAVEN_WRAPPER_DISTS = (Get-Item $MAVEN_M2_PATH).Target[0] + "/wrapper/dists"
+}
+
+$MAVEN_HOME_PARENT = "$MAVEN_WRAPPER_DISTS/$distributionUrlNameMain"
+$MAVEN_HOME_NAME = ([System.Security.Cryptography.SHA256]::Create().ComputeHash([byte[]][char[]]$distributionUrl) | ForEach-Object {$_.ToString("x2")}) -join ''
+$MAVEN_HOME = "$MAVEN_HOME_PARENT/$MAVEN_HOME_NAME"
+
+if (Test-Path -Path "$MAVEN_HOME" -PathType Container) {
+  Write-Verbose "found existing MAVEN_HOME at $MAVEN_HOME"
+  Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"
+  exit $?
+}
+
+if (! $distributionUrlNameMain -or ($distributionUrlName -eq $distributionUrlNameMain)) {
+  Write-Error "distributionUrl is not valid, must end with *-bin.zip, but found $distributionUrl"
+}
+
+# prepare tmp dir
+$TMP_DOWNLOAD_DIR_HOLDER = New-TemporaryFile
+$TMP_DOWNLOAD_DIR = New-Item -Itemtype Directory -Path "$TMP_DOWNLOAD_DIR_HOLDER.dir"
+$TMP_DOWNLOAD_DIR_HOLDER.Delete() | Out-Null
+trap {
+  if ($TMP_DOWNLOAD_DIR.Exists) {
+    try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
+    catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
+  }
+}
+
+New-Item -Itemtype Directory -Path "$MAVEN_HOME_PARENT" -Force | Out-Null
+
+# Download and Install Apache Maven
+Write-Verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
+Write-Verbose "Downloading from: $distributionUrl"
+Write-Verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
+
+$webclient = New-Object System.Net.WebClient
+if ($env:MVNW_USERNAME -and $env:MVNW_PASSWORD) {
+  $webclient.Credentials = New-Object System.Net.NetworkCredential($env:MVNW_USERNAME, $env:MVNW_PASSWORD)
+}
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$webclient.DownloadFile($distributionUrl, "$TMP_DOWNLOAD_DIR/$distributionUrlName") | Out-Null
+
+# If specified, validate the SHA-256 sum of the Maven distribution zip file
+$distributionSha256Sum = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionSha256Sum
+if ($distributionSha256Sum) {
+  if ($USE_MVND) {
+    Write-Error "Checksum validation is not supported for maven-mvnd. `nPlease disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties."
+  }
+  Import-Module $PSHOME\Modules\Microsoft.PowerShell.Utility -Function Get-FileHash
+  if ((Get-FileHash "$TMP_DOWNLOAD_DIR/$distributionUrlName" -Algorithm SHA256).Hash.ToLower() -ne $distributionSha256Sum) {
+    Write-Error "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised. If you updated your Maven version, you need to update the specified distributionSha256Sum property."
+  }
+}
+
+# unzip and move
+Expand-Archive "$TMP_DOWNLOAD_DIR/$distributionUrlName" -DestinationPath "$TMP_DOWNLOAD_DIR" | Out-Null
+
+# Find the actual extracted directory name (handles snapshots where filename != directory name)
+$actualDistributionDir = ""
+
+# First try the expected directory name (for regular distributions)
+$expectedPath = Join-Path "$TMP_DOWNLOAD_DIR" "$distributionUrlNameMain"
+$expectedMvnPath = Join-Path "$expectedPath" "bin/$MVN_CMD"
+if ((Test-Path -Path $expectedPath -PathType Container) -and (Test-Path -Path $expectedMvnPath -PathType Leaf)) {
+  $actualDistributionDir = $distributionUrlNameMain
+}
+
+# If not found, search for any directory with the Maven executable (for snapshots)
+if (!$actualDistributionDir) {
+  Get-ChildItem -Path "$TMP_DOWNLOAD_DIR" -Directory | ForEach-Object {
+    $testPath = Join-Path $_.FullName "bin/$MVN_CMD"
+    if (Test-Path -Path $testPath -PathType Leaf) {
+      $actualDistributionDir = $_.Name
+    }
+  }
+}
+
+if (!$actualDistributionDir) {
+  Write-Error "Could not find Maven distribution directory in extracted archive"
+}
+
+Write-Verbose "Found extracted Maven distribution directory: $actualDistributionDir"
+Rename-Item -Path "$TMP_DOWNLOAD_DIR/$actualDistributionDir" -NewName $MAVEN_HOME_NAME | Out-Null
+try {
+  Move-Item -Path "$TMP_DOWNLOAD_DIR/$MAVEN_HOME_NAME" -Destination $MAVEN_HOME_PARENT | Out-Null
+} catch {
+  if (! (Test-Path -Path "$MAVEN_HOME" -PathType Container)) {
+    Write-Error "fail to move MAVEN_HOME"
+  }
+} finally {
+  try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
+  catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
+}
+
+Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"
+</file>
+
+<file path="backend/pom.xml">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.2.0</version>
+		<relativePath/>
+	</parent>
+	<groupId>com.fittrack</groupId>
+	<artifactId>backend</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name/>
+	<description/>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
+	<properties>
+		<java.version>21</java.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
+</file>
+
+<file path="frontend/src/components/Button/Button.css">
+.btn {
+⋮----
+.btn--full {
+⋮----
+.btn:focus-visible {
+⋮----
+.btn__content {
+⋮----
+.btn__icon {
+⋮----
+@media (hover: hover) {
+⋮----
+.btn:hover:not(:disabled):not([aria-disabled='true']) {
+⋮----
+.btn:active:not(:disabled):not([aria-disabled='true']) {
+⋮----
+.btn.is-loading {
+⋮----
+.btn.is-loading .btn__content {
+⋮----
+.btn__spinner {
+⋮----
+.btn__spinner svg {
+⋮----
+.btn.is-success {
+⋮----
+.btn.is-success .btn__icon {
+⋮----
+.btn:disabled {
+⋮----
+.btn--secondary {
+⋮----
+@media (hover: hover) {
+⋮----
+.btn--secondary:hover:not(:disabled):not([aria-disabled='true']) {
+⋮----
+.btn--ghost {
+⋮----
+@media (hover: hover) {
+⋮----
+.btn--ghost:hover:not(:disabled):not([aria-disabled='true']) {
+⋮----
+@keyframes btn-spin {
+⋮----
+@keyframes btn-pop {
+</file>
+
+<file path="frontend/src/components/Button/Button.jsx">
+export default function Button({
+  children,
+  type = 'button',
+  variant = 'primary',
+  loading = false,
+  success = false,
+  disabled = false,
+  icon: Icon,
+  fullWidth = false,
+  width,
+  height,
+  className = '',
+  style,
+  onClick,
+  ...rest
+})
+⋮----
+const toLength = (value) =>
+⋮----
+function handleClick(event)
+</file>
+
+<file path="frontend/src/components/Checkbox/Checkbox.css">
+.cb {
+⋮----
+.cb__label {
+⋮----
+.cb__label.is-disabled {
+⋮----
+.cb__label.is-shaking {
+⋮----
+.cb__input {
+⋮----
+.cb__box {
+⋮----
+@media (hover: hover) {
+⋮----
+.cb__label:hover .cb__box {
+⋮----
+.cb__label:active .cb__box {
+⋮----
+.cb__input:checked + .cb__box {
+⋮----
+.cb__input:focus-visible + .cb__box {
+⋮----
+.cb.is-invalid .cb__box {
+⋮----
+.cb__check {
+⋮----
+.cb__input:checked + .cb__box .cb__check {
+⋮----
+.cb__message {
+⋮----
+.cb__message.is-open {
+⋮----
+.cb__message-inner {
+⋮----
+.cb__error {
+⋮----
+.cb__error svg {
+⋮----
+@keyframes cb-shake {
+</file>
+
+<file path="frontend/src/components/Checkbox/Checkbox.jsx">
+function handleAnimationEnd(event)
+</file>
+
+<file path="frontend/src/components/Logo/Logo.css">
+.logo {
+⋮----
+.logo__mark {
+⋮----
+.logo__emblem {
+⋮----
+.logo__text {
+</file>
+
+<file path="frontend/src/components/Logo/Logo.jsx">
+export default function Logo({
+  scale = 1,
+  emblemSrc = '/assets/fittrack-emblem.svg',
+  name = 'FitTrack',
+  className = '',
+  style,
+})
+</file>
+
+<file path="frontend/src/components/PasswordStrength/PasswordStrength.css">
+.pws {
+⋮----
+.pws.is-open {
+⋮----
+.pws[data-level='2'] {
+⋮----
+.pws[data-level='3'] {
+⋮----
+.pws[data-level='4'] {
+⋮----
+.pws__inner {
+⋮----
+.pws__row {
+⋮----
+.pws__bars {
+⋮----
+.pws__bar {
+⋮----
+.pws__bar.is-filled {
+⋮----
+.pws__label {
+</file>
+
+<file path="frontend/src/components/PasswordStrength/PasswordStrength.jsx">
+export default function PasswordStrength({ password = '' })
+</file>
+
+<file path="frontend/src/pages/MemberSignup/MemberSignup.css">
+.signup {
+⋮----
+.signup__photo {
+⋮----
+.signup__photo-img {
+⋮----
+.signup__shade {
+⋮----
+.signup__layout {
+⋮----
+.signup__card {
+⋮----
+.signup__glow {
+⋮----
+.signup__title,
+⋮----
+.signup__title {
+⋮----
+.signup__form {
+⋮----
+.signup__confirm {
+⋮----
+.signup__actions {
+⋮----
+.signup__status {
+⋮----
+.signup__status.is-open {
+⋮----
+.signup__status-inner {
+⋮----
+.signup__status p {
+⋮----
+.signup__status--success p {
+⋮----
+.signup__status--error p {
+⋮----
+.signup__divider {
+⋮----
+.signup__footer {
+⋮----
+.signup__footer a {
+⋮----
+.signup__footer a:hover {
+⋮----
+.signup__brand {
+⋮----
+.signup__logo {
+⋮----
+.signup__headline {
+⋮----
+.signup__headline span {
+⋮----
+.signup-reveal {
+⋮----
+@media (max-width: 900px) {
+⋮----
+.signup {
+⋮----
+.signup__photo {
+⋮----
+.signup__layout {
+⋮----
+.signup__brand {
+⋮----
+.signup__logo {
+⋮----
+.signup__headline {
+⋮----
+.signup__card {
+⋮----
+@media (max-width: 480px) {
+⋮----
+.signup__form {
+⋮----
+.signup__card {
+⋮----
+.signup__glow {
+⋮----
+@media (max-width: 420px) {
+⋮----
+.signup__form {
+⋮----
+@media (max-width: 380px) {
+⋮----
+.signup__form {
+⋮----
+@keyframes signup-rise {
+⋮----
+@keyframes signup-fade {
+⋮----
+@keyframes signup-photo-in {
+⋮----
+@keyframes signup-glow {
+</file>
+
+<file path="frontend/src/pages/Login.jsx">
+function Login({ onLoginSuccess = () => {} })
+⋮----
+const handleSubmit = async (e) =>
+⋮----
+const roleBtn = (active) =>
+</file>
+
+<file path="frontend/src/services/auth.js">
+export async function registerMember(payload)
+</file>
+
+<file path="frontend/package.json">
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "iconoir-react": "^7.12.2",
+    "lucide-react": "^1.80.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.7",
+    "recharts": "^3.11.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.13.0",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.6"
+  }
+}
+</file>
+
+<file path="frontend/src/components/Icons/Icons.jsx">
+function Icon({ size = 24, strokeWidth = 2, className, children, ...rest })
+⋮----
+export function MailIcon(props)
+⋮----
+export function LockIcon(props)
+⋮----
+export function EyeIcon(props)
+⋮----
+export function EyeOffIcon(props)
+⋮----
+export function CheckIcon(props)
+⋮----
+export function AlertIcon(props)
+⋮----
+export function ChevronDownIcon(props)
+⋮----
+export function SpinnerIcon(props)
+</file>
+
+<file path="frontend/src/components/TextField/TextField.css">
+.tf {
+⋮----
+.tf__label {
+⋮----
+.tf__field {
+⋮----
+.tf__field:focus-within {
+⋮----
+.tf__field.is-valid {
+⋮----
+.tf__field.is-valid:focus-within {
+⋮----
+.tf__field.is-invalid {
+⋮----
+.tf__field.is-disabled {
+⋮----
+.tf__field.is-shaking {
+⋮----
+.tf__icon {
+⋮----
+.tf__divider {
+⋮----
+.tf__field:focus-within .tf__icon {
+⋮----
+.tf__field:focus-within .tf__divider {
+⋮----
+.tf__field.is-invalid .tf__icon {
+⋮----
+.tf__field.is-invalid .tf__divider {
+⋮----
+.tf__input {
+⋮----
+.tf__input:focus-visible {
+⋮----
+.tf__input::placeholder {
+⋮----
+.tf__input:focus::placeholder {
+⋮----
+.tf__input:disabled {
+⋮----
+.tf__input[type='number'] {
+⋮----
+.tf__input[type='number']::-webkit-inner-spin-button,
+⋮----
+.tf__input[type='date'][data-empty='true']:not(:focus) {
+⋮----
+.tf__input[type='date']::-webkit-calendar-picker-indicator {
+⋮----
+.tf__input:-webkit-autofill {
+⋮----
+.tf__toggle {
+⋮----
+.tf__toggle:hover:not(:disabled) {
+⋮----
+.tf__toggle:disabled {
+⋮----
+.tf__eye {
+⋮----
+.tf__eye svg {
+⋮----
+.tf__eye-off {
+⋮----
+.tf__eye.is-visible .tf__eye-on {
+⋮----
+.tf__eye.is-visible .tf__eye-off {
+⋮----
+.tf__status {
+⋮----
+.tf__message {
+⋮----
+.tf__message.is-open {
+⋮----
+.tf__message-inner {
+⋮----
+.tf__text {
+⋮----
+.tf__text.is-error {
+⋮----
+.tf__text-icon {
+⋮----
+@keyframes tf-shake {
+⋮----
+@keyframes tf-pop {
+</file>
+
+<file path="frontend/src/components/TextField/TextField.jsx">
+// Start the shake animation whenever the parent bumps shakeSignal.
+⋮----
+// Remember the last message so its text stays visible while it collapses.
+⋮----
+function handleAnimationEnd(event)
+</file>
+
+<file path="frontend/src/utils/validators.js">
+export function validateEmail(value)
+⋮----
+export function validatePassword(value)
+⋮----
+export function validateConfirmPassword(value, password)
+⋮----
+/* ---- Registration details validators ------------------------------------------- */
+⋮----
+export function validateFullName(value)
+⋮----
+/** Age in whole years from a "YYYY-MM-DD" string, or '' if it can't be read. */
+export function getAge(dateString, today = new Date())
+⋮----
+export function validateBirthDate(value, today = new Date())
+⋮----
+export function validateRequiredChoice(value, message = 'Please choose an option.')
+⋮----
+export function validateRequiredText(value, message = 'This field is required.')
+⋮----
+/** Optional field: empty is fine, a filled value must be a sensible weight. */
+export function validateWeightKg(value)
+⋮----
+/** Optional field: height is entered in metres, e.g. 1.75. */
+export function validateHeightM(value)
+⋮----
+export function getPasswordStrength(password)
+</file>
+
+<file path="frontend/src/index.css">
+@import url("https://fonts.googleapis.com/css2?family=Goudy+Bookletter+1911&family=Google+Sans+Code:wght@700&display=swap");
+@import "tailwindcss";
+⋮----
+@theme {
+⋮----
+body {
+⋮----
+.font-display { font-family: "Britannic Bold", "Alfa Slab One", Georgia, serif; }
+.font-body { font-family: "Goudy Bookletter 1911", "Goudy Old Style", Georgia, serif; }
+.font-ui { font-family: "Google Sans Code", ui-monospace, Menlo, monospace; }
+⋮----
+@keyframes fade-in {
+@keyframes fade-up {
+@keyframes slide-right {
+@keyframes pop-in {
+@keyframes grow-x {
+⋮----
+@media (prefers-reduced-motion: no-preference) {
+⋮----
+.animate-fade-in { animation: fade-in 0.6s ease-out both; }
+.animate-fade-up { animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-slide-right { animation: slide-right 0.65s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-pop-in { animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-grow-x { animation: grow-x 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+</file>
+
+<file path="frontend/src/main.jsx">
+
+</file>
+
+<file path="README.md">
+<p align="center">
+  <img src="/cf5fe00f-d53a-4767-9f5d-8c6cef6859b9.webp" alt="FitTrack Logo" width="120" />
+</p>
+
+<h1 align="center">FITTRACK</h1>
+
+<p align="center">
+  <strong>A unified Gym Membership Management App for Admins, Trainers, and Members.</strong>
+</p>
+
+<p align="center">
+  Bringing together facility operations, coaching workflows, and personal fitness tracking into a single full-stack platform. Below is the architectural breakdown, feature specifications, and data structure required to build and operate the system.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Java_21-1E293B?style=for-the-badge&logo=openjdk&logoColor=60A5FA" alt="Java 21" />
+  <img src="https://img.shields.io/badge/Spring_Boot-2563EB?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot" />
+  <img src="https://img.shields.io/badge/Maven-334155?style=for-the-badge&logo=apachemaven&logoColor=93C5FD" alt="Maven" />
+  <img src="https://img.shields.io/badge/React_19-0284C7?style=for-the-badge&logo=react&logoColor=white" alt="React 19" />
+  <img src="https://img.shields.io/badge/JavaScript-475569?style=for-the-badge&logo=javascript&logoColor=BFDBFE" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/Vite-1D4ED8?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-334155?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Git-1E293B?style=for-the-badge&logo=git&logoColor=93C5FD" alt="Git" />
+</p>
+
+<p align="center">
+  <a href="#application-design">Architecture</a> •
+  <a href="#about-the-project">Features</a> •
+  <a href="#design-patterns">Design Patterns</a> •
+  <a href="#patch-notes">Patch Notes</a>
+</p>
+
+## About the Project
+
+The application is a fitness management platform designed to streamline trainer-client interactions, workout programming, and fitness progress tracking. It consists of two primary interfaces:
+
+### Trainer Portal (Coaching & Programming)
+
+Provides trainers with tools to manage assigned clients, create personalized workout programs, and monitor training performance.
+
+-   **Client Management:** View assigned members, membership status, recent activity, and fitness goals.
+-   **Workout Program Builder:** Create workout plans from scratch or customize existing templates.
+-   **Exercise Configuration:** Organize routines by training days and define exercises, sets, reps, weights, rest intervals, and instructions.
+-   **Workout Monitoring:** Review completed workout logs, compare actual performance against prescribed targets, and provide feedback.
+
+### Member App (Onboarding & Workout Execution)
+
+Provides members with a mobile-friendly platform for accessing workout programs, recording training sessions, and tracking fitness progress.
+
+-   **Onboarding & Goal Setting:** Collect personal information, baseline fitness metrics, training experience, injury history, and fitness goals.
+-   **Membership & Trainer Information:** View membership details, payment status, renewal dates, and assigned trainer information.
+-   **Workout Viewer:** Access assigned routines, exercise instructions, target metrics, and rest timers.
+-   **Workout Logging:** Record completed sets, reps, weights, session notes, and Rate of Perceived Exertion (RPE).
+-   **Progress Tracking:** Review workout history, training volume, personal records, and workout consistency.
+
+### Project Objective
+
+To provide an integrated platform that simplifies fitness program management, improves trainer-client collaboration, and enables consistent tracking of individual fitness progress.
+
+## Application Design
+### System Architecture & Domain Model
+> **TBA**
+### Design Patterns
+#### Creational: Singleton Pattern
+-   **Location:**  `backend/src/main/java/com/fittrack/backend/repository/DataStore.java`
+- The `DataStore` class implements the thread-safe **Double-Checked Locking (DCL)** variant of the Singleton pattern. Since this application utilizes direct binary file persistence (`.dat` files) rather than a managed database connection pool or Spring-managed beans for repositories, `DataStore` guarantees that only one global instance manages the files across concurrent requests. Having multiple instances of the datastore could lead to race conditions or file-locking conflicts when writing to disk. The singleton lifecycle ensures all consumers (such as `DemoSeeder`, `AuthController`, and `DashboardService`) share the exact same synchronized repository instances and memory locks.
+#### Structural: Facade Pattern
+-   **Location:**  `backend/src/main/java/com/fittrack/backend/repository/DataStore.java`
+- DataStore serves not only as a Singleton but also as a **Facade** over the various underlying persistence subsystems, such as `UserRepository`, `PlanRepository`, and `NotificationRepository`, among others.  The application splits data across multiple domain repositories and raw `FileRepository` instances. Each repository requires distinct file paths (data/memberships.dat, data/metrics.dat, etc.) and identity-resolution lambdas (`Membership::getId`, `BodyMetric::getId`). Without the facade, client layers would have to manage file paths, instantiate low-level file repositories, and resolve dependencies independently. `DataStore` presents a single, uniform interface (`DataStore.getInstance().sessions()`, `DataStore.getInstance().users()`) hiding the instantiation complexity of the persistence subsystem.
+#### Structural: Adapter Pattern
+-   **Location:**    
+    -   Target Interface: `backend/src/main/java/com/fittrack/backend/repository/Repository.java`
+    -   Adapter: `backend/src/main/java/com/fittrack/backend/repository/FileRepository.java`
+- `FileRepository<T>` acts as an **Adapter** that adapts Java's procedural, low-level stream/serialization APIs (`FileInputStream`, `FileOutputStream`, `ObjectInputStream`, `ObjectOutputStream`, `File`) to conform to the high-level domain Repository<T> interface. Dependent services only interact with the `Repository<T>` contract (`save`, `findById`, `findAll`). They do not need to know that objects are being serialized to disk or that reads and writes require stream wrapping, directory verification (mkdirs), or synchronization locks. By adapting stream operations to a general-purpose repository contract, alternative storage mechanisms (e.g., an in-memory repository or database-driven repository) can be substituted in the future without changing the caller-side logic in the rest of the application.
+
+
+> **CLASS DIAGRAM TBA**
+
+## Patch Notes
+#### V 1.0 [█░░░░░░░░░] 10%
+ - Created the github repository and added the members
+ - Created the README
+ - Created log in page
+ - Created sign up page
+ - Created class diagram
+#### V 1.1 [██░░░░░░░░] 10%
+ - Added Patch Notes to the README
+ - Removed admin class
+ - Added new classes to the class diagram
+ - Added Navigable Systems
+ - Optimized pop-ups and file writing systems
+#### V 1.2  [██░░░░░░░░] 20%
+ - Started the frontend using react
+ - Started the backend using Springboot
+ - 80% progress for the authentication pages
+#### V 1.3  [███░░░░░░░] 30%
+- Migrated progress to React and Springboot project
+- Authentication and Member Dashboards are now up
+
+
+
+## Authors
+- Knowell M. Lawas --- **Backend and front end utils** --- [@three-onefouronefive](https://github.com/three-onefouronefive)
+- Vince Cyrel A. Jurado --- **Backend** --- [@juradovince15-cmyk](https://github.com/juradovince15-cmyk)
+- Nhelmar R. Pahila --- **Frontend** --- [@Nhell1167](https://github.com/Nhell1167)
+- Juter R. Blanco  --- **Frontend** --- [@imj-blnc](https://github.com/imj-blnc)
+- Jeferson Lark L. Manatad --- **Frontend** --- [@Jefersoninja](https://github.com/Jefersoninja)
+
+*See also the list of contributors who participated in this project.*
+</file>
+
+<file path="frontend/src/components/Logo.jsx">
+export default function Logo({ size = "md", className = "" })
+</file>
+
+<file path="frontend/src/pages/MemberSignup/MemberSignup.jsx">
+function getErrors(values)
+⋮----
+export default function MemberSignup({ loginHref = '/login' })
+⋮----
+const visibleError = (name) =>
+const isValid = (name) =>
+⋮----
+function handleChange(event)
+⋮----
+function handleBlur(event)
+⋮----
+async function handleSubmit(event)
+⋮----
+const reveal = (index) =>
+</file>
+
+<file path="frontend/src/pages/MemberDash.jsx">
+function parseDate(value)
+⋮----
+function fmtDate(value, opts = { month: "short", day: "numeric", year: "numeric" })
+⋮----
+// For LocalDateTime strings like "2026-11-25T10:30:00"
+function fmtDateTime(value)
+⋮----
+function titleCase(s)
+⋮----
+function formatTime(value)
+⋮----
+// "18:00:00" -> "6:00 PM"
+⋮----
+function buildChart(points)
+⋮----
+function Empty({ children })
+⋮----
+function MemberDashboard()
+⋮----
+const handleLogout = () =>
+</file>
+
+<file path="frontend/index.html">
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Oswald:wght@600&family=Goudy+Bookletter+1911&family=Google+Sans+Code:wght@700&family=Inter:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="frontend/src/App.jsx">
+const Placeholder = ({ title }) =>
+⋮----
+export default function App()
+</file>
+
+</files>
