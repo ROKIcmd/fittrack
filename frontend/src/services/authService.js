@@ -13,17 +13,26 @@ async function requestAuth(path, payload) {
         throw new Error(data.error || data.message || `Authentication failed (${res.status})`);
     }
 
-    return data; // { id, fullName, email, role }
+    return data;
 }
 
 export function login({ email, password, role }) {
     return requestAuth("/login", { email, password, role });
 }
 
-export function register({ firstName, lastName, email, password }) {
-    return requestAuth("/register", { firstName, lastName, email, password });
+export async function checkEmail(email) {
+    const res = await fetch(`${API_BASE}/check-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+        throw new Error(data.error || "Email is already taken");
+    }
+    return data;
 }
 
-export function createTestTrainer() {
-    return requestAuth("/dev/create-trainer", {});
+export function register(payload) {
+    return requestAuth("/register", payload);
 }

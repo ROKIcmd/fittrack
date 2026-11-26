@@ -154,7 +154,7 @@ function MemberDashboard() {
 
             <div className="relative min-h-screen w-full overflow-hidden bg-[#090e16] text-white">
                 <img
-                    src="../assets/gym-bg.jpeg"
+                    src="https://www.corehandf.com/cdn/shop/articles/Chiswick-EG-7_1.jpg?v=1782411009"
                     alt=""
                     className="anim-bg pointer-events-none absolute left-0 top-0 h-[780px] w-full object-cover opacity-80"
                 />
