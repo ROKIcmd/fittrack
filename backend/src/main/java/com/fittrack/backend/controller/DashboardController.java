@@ -1,0 +1,32 @@
+package com.fittrack.backend.controller;
+
+import com.fittrack.backend.dto.DashboardResponse;
+import com.fittrack.backend.service.DashboardService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/members")
+@CrossOrigin(origins = "http://localhost:5173")
+public class DashboardController {
+
+    private final DashboardService dashboardService;
+
+    public DashboardController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
+    }
+
+    @GetMapping("/{id}/dashboard")
+    public ResponseEntity<DashboardResponse> dashboard(@PathVariable String id) {
+        return dashboardService.build(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/workouts")
+    public ResponseEntity<List<DashboardResponse.WorkoutLogItem>> workouts(@PathVariable String id) {
+        return ResponseEntity.ok(dashboardService.allWorkouts(id));
+    }
+}

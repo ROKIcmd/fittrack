@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 
-
 const sizes = {
   md: { icon: "h-11 w-11", text: "text-2xl" },
   sm: { icon: "h-8 w-8", text: "text-xl" },

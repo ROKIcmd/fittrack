@@ -1,5 +1,5 @@
 import { AnimationStyles, Animate } from "../Styles/Animations.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import {
     Card,
     CardTitle,
@@ -16,9 +16,12 @@ import {
     Icon,
     fonts,
 } from "../components/MemberDashComp.jsx";
+import { useAuth } from "../context/AuthContext";
+import { dashboardService } from "../services/dashboardService";
+import { useDashboard } from "../hooks/useDashboard";
 
 /* ------------------------------------------------------------------ */
-/* Sample data – replace with your API data later                      */
+/* Static config (navigation only)                                     */
 /* ------------------------------------------------------------------ */
 const NAV_ITEMS = [
     { label: "Dashboard", icon: Icon.Home, href: "/member/dashboard", active: true },
@@ -28,77 +31,128 @@ const NAV_ITEMS = [
     { label: "Workout Log", icon: Icon.Clipboard, href: "/member/workout-log" },
     { label: "Progress", icon: Icon.TrendUp, href: "/member/progress" },
     { label: "Profile", icon: Icon.Gear, href: "/member/profile" },
-]
+];
 
-const MEMBERSHIP = { tier: "Gold", plan: "Monthly", progress: 84.5, remaining: "3 days remaining", renews: "Nov 17, 2026" }
+/* ------------------------------------------------------------------ */
+/* Formatting helpers                                                  */
+/* ------------------------------------------------------------------ */
+// Parses "2026-11-27" as a local date (new Date("2026-11-27") would be UTC)
+function parseDate(value) {
+    if (!value) return null;
+    const [y, m, d] = String(value).split("-").map(Number);
+    return new Date(y, m - 1, d);
+}
 
-const SCHEDULE = { date: "Nov 14, 2026 | Sat", category: "Legs" }
+function fmtDate(value, opts = { month: "short", day: "numeric", year: "numeric" }) {
+    const d = parseDate(value);
+    return d ? d.toLocaleDateString("en-US", opts) : "";
+}
 
-const WORKOUT_LOG = [
-    { title: "Upper Body Push", status: "completed" },
-    { title: "Upper Body Push", status: "completed" },
-    { title: "Upper Body Push", status: "rescheduled" },
-    { title: "Upper Body Push", status: "completed" },
-    { title: "Upper Body Push", status: "completed" },
-    { title: "Upper Body Push", status: "completed" },
-].map((w) => ({ ...w, meta: ["Nov 12, 2026 | 45 min | 40kg", "6/6 Excercies"] }))
+// For LocalDateTime strings like "2026-11-25T10:30:00"
+function fmtDateTime(value) {
+    if (!value) return "";
+    return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 
-const MUSCLE_DATA = [
-    { x: 1, y: 69.4 },
-    { x: 3, y: 70.1 },
-    { x: 5, y: 70.8 },
-    { x: 7, y: 71.3 },
-    { x: 9, y: 71.8 },
-    { x: 12, y: 70.9 },
-    { x: 14, y: 71.5 },
-    { x: 16, y: 72.0 },
-    { x: 18, y: 72.7 },
-    { x: 20, y: 72.9 },
-    { x: 22, y: 73.2 },
-    { x: 24, y: 73.7 },
-    { x: 26, y: 74.0 },
-    { x: 28, y: 74.2 },
-    { x: 30, y: 74.5 },
-]
-const X_TICKS = [1, 7, 14, 21, 28, 30].map((d) => ({ value: d, label: `Nov ${d}` }))
-const Y_TICKS = [68, 70, 72, 74, 76]
+function titleCase(s) {
+    return s ? s.charAt(0) + s.slice(1).toLowerCase() : "";
+}
 
-const STATS = [
-    { label: "Current Weight", value: 78.4, unit: "kg" },
-    { label: "Body fat %", value: 15.2, unit: "%" },
-    { label: "Muscle mass", value: 63.1, unit: "kg" },
-    { label: "BMI Index", value: 25.6, unit: "" },
-]
+function formatTime(value) {
+    // "18:00:00" -> "6:00 PM"
+    if (!value) return "";
+    const [h, m] = String(value).split(":").map(Number);
+    const d = new Date(2000, 0, 1, h, m);
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
 
-const UPDATES = [
-    { title: "Membership Renewal Approved", date: "Nov 18, 2026" },
-    { title: "Trainer Updated Body Metrics", date: "Nov 16, 2026" },
-    { title: "Reschedule Declined", date: "Nov 15, 2026" },
-    { title: "Reschedule Approved", date: "Nov 13, 2026" },
-]
+// Turns the backend's muscle progress points into the shape LineChart expects
+function buildChart(points) {
+    if (!points || points.length === 0) {
+        return { data: [], xTicks: [], yTicks: [], last: null };
+    }
 
-const TRAINER = { name: "Smith, John", experience: "5 years", clients: 4 }
+    const origin = parseDate(points[0].date);
+    const data = points.map((p) => ({
+        x: Math.round((parseDate(p.date) - origin) / 86400000), // days since first check-in
+        y: p.muscleMassKg,
+    }));
+
+    const step = Math.max(1, Math.ceil(points.length / 6));
+    const xTicks = points
+        .map((p, i) => ({ value: data[i].x, label: fmtDate(p.date, { month: "short", day: "numeric" }) }))
+        .filter((_, i) => i % step === 0 || i === points.length - 1);
+
+    const ys = data.map((d) => d.y);
+    const lo = Math.floor(Math.min(...ys));
+    const hi = Math.max(Math.ceil(Math.max(...ys)), lo + 2);
+    const tickStep = Math.ceil((hi - lo) / 4);
+    const yTicks = [];
+    for (let v = lo; v <= hi; v += tickStep) yTicks.push(v);
+
+    const lastPoint = points[points.length - 1];
+    return {
+        data,
+        xTicks,
+        yTicks,
+        last: { title: `${lastPoint.muscleMassKg} kg`, sub: fmtDate(lastPoint.date, { month: "short", day: "numeric" }) },
+    };
+}
+
+function Empty({ children }) {
+    return <p className={`${fonts.body} text-sm text-white/60`}>{children}</p>;
+}
 
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 function MemberDashboard() {
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
+    const { data, loading, error } = useDashboard(dashboardService.getMemberDashboard, user?.id);
+
+    if (!user) return <Navigate to="/login" replace />;
 
     const handleLogout = () => {
-        // Clear session/token if you're using one
-        localStorage.removeItem("token");
-
-        // Redirect to login page
-        navigate("/");
+        logout();
+        navigate("/login", { replace: true });
     };
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#090e16] text-white">
+                <p className={fonts.body}>Loading your dashboard…</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#090e16] text-red-400">
+                <p className={fonts.body}>{error}</p>
+            </div>
+        );
+    }
+
+    const {
+        firstName,
+        membership,
+        upcomingSession,
+        recentWorkouts = [],
+        muscleGainProgress = [],
+        bodyStats,
+        notifications = [],
+        trainer,
+    } = data;
+
+    const chart = buildChart(muscleGainProgress);
+    const chartMonth = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
     return (
         <>
             <AnimationStyles />
 
             <div className="relative min-h-screen w-full overflow-hidden bg-[#090e16] text-white">
-                {/* Background photo + dark overlay that fades into the page colour */}
                 <img
                     src="../assets/gym-bg.jpeg"
                     alt=""
@@ -122,11 +176,11 @@ function MemberDashboard() {
                                     delay={0.2}
                                     className={`${fonts.ui} mt-5 text-3xl font-semibold sm:text-4xl`}
                                 >
-                                    Welcome, <span className="text-[#60a5fa]">Juan!</span>
+                                    Welcome, <span className="text-[#60a5fa]">{firstName}!</span>
                                 </Animate>
                             </div>
                             <Animate type="card">
-                                <ProfilePill name="Dela Cruz, Juan" />
+                                <ProfilePill name={user?.fullName} />
                             </Animate>
                         </header>
 
@@ -139,32 +193,41 @@ function MemberDashboard() {
                                     <Card className="p-6">
                                         <CardTitle>Membership</CardTitle>
 
-                                        <div className="mt-2 flex items-center gap-4">
-                                            <span className={`${fonts.heading} flex items-center gap-2 text-3xl text-[#ffe34b]`}>
-                                                <Icon.Sparkle size={22} />
-                                                {MEMBERSHIP.tier}
-                                            </span>
-                                            <span className="h-4 w-px bg-white/40" />
-                                            <span className={`${fonts.body} text-3xl`}>{MEMBERSHIP.plan}</span>
-                                        </div>
+                                        {membership ? (
+                                            <>
+                                                <div className="mt-2 flex items-center gap-4">
+                                                    <span className={`${fonts.heading} flex items-center gap-2 text-3xl text-[#ffe34b]`}>
+                                                        <Icon.Sparkle size={22} />
+                                                        {titleCase(membership.tier)}
+                                                    </span>
+                                                    <span className="h-4 w-px bg-white/40" />
+                                                    <span className={`${fonts.body} text-3xl`}>
+                                                        {titleCase(membership.cycle)}
+                                                    </span>
+                                                </div>
 
-                                        <StatusBadge status="active" className="mt-2 !px-3 !py-0.5 !text-sm">
-                                            Active
-                                        </StatusBadge>
+                                                <StatusBadge
+                                                    status={membership.active ? "active" : "expired"}
+                                                    className="mt-2 !px-3 !py-0.5 !text-sm"
+                                                >
+                                                    {membership.active ? "Active" : "Expired"}
+                                                </StatusBadge>
 
-                                        <div className="mt-5">
-                                            <ProgressBar value={MEMBERSHIP.progress} />
-                                            <div className={`${fonts.body} mt-3 flex items-center justify-between text-base`}>
-                                                <span>{MEMBERSHIP.remaining}</span>
-                                                <span className="h-4 w-px bg-white/40" />
-                                                <span>Renew {MEMBERSHIP.renews}</span>
-                                            </div>
-                                        </div>
+                                                <div className="mt-5">
+                                                    <ProgressBar value={membership.progress} />
+                                                    <div className={`${fonts.body} mt-3 flex items-center justify-between text-base`}>
+                                                        <span>{membership.daysRemaining} days remaining</span>
+                                                        <span className="h-4 w-px bg-white/40" />
+                                                        <span>Renew {fmtDate(membership.renewalDate)}</span>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <Empty>No membership on record.</Empty>
+                                        )}
 
                                         <div className="mt-4 flex justify-end">
-                                            <PillButton variant="outline" size="sm" href="/member/membership">
-                                                Manage →
-                                            </PillButton>
+                                            <PillButton variant="outline" size="sm" to="/member/membership">Manage →</PillButton>
                                         </div>
                                     </Card>
                                 </Animate>
@@ -183,23 +246,23 @@ function MemberDashboard() {
                                                     </span>
                                                 </h2>
 
-                                                <button
-                                                    type="button"
-                                                    className={`${fonts.ui} flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-4 py-1.5 text-xs transition hover:border-[#3b82f6] hover:bg-white/10`}
-                                                >
-                                                    November 2026
-                                                    <Icon.ChevronDown size={14} />
-                                                </button>
+                                                <span className={`${fonts.ui} rounded-full border border-white/25 bg-white/5 px-4 py-1.5 text-xs`}>
+                                                    {chartMonth}
+                                                </span>
                                             </div>
 
                                             <div className="mt-2">
-                                                <LineChart
-                                                    data={MUSCLE_DATA}
-                                                    xTicks={X_TICKS}
-                                                    yTicks={Y_TICKS}
-                                                    yLabel="Muscle Mass (kg)"
-                                                    highlightLabel={{ title: "74.5 kg", sub: "Nov 30" }}
-                                                />
+                                                {chart.data.length > 0 ? (
+                                                    <LineChart
+                                                        data={chart.data}
+                                                        xTicks={chart.xTicks}
+                                                        yTicks={chart.yTicks}
+                                                        yLabel="Muscle Mass (kg)"
+                                                        highlightLabel={chart.last}
+                                                    />
+                                                ) : (
+                                                    <Empty>No body metrics recorded yet.</Empty>
+                                                )}
                                             </div>
                                         </div>
                                     </Card>
@@ -213,24 +276,34 @@ function MemberDashboard() {
                                     <Card className="relative p-4">
                                         <div className="flex items-start justify-between">
                                             <h2 className={`${fonts.heading} text-sm`}>Schedule</h2>
-                                            <StatusBadge
-                                                status="upcoming"
-                                                className="!border !px-2.5 !py-0.5 !text-[11px]"
-                                            >
-                                                Upcoming
-                                            </StatusBadge>
+                                            {upcomingSession && (
+                                                <StatusBadge status="upcoming" className="!border !px-2.5 !py-0.5 !text-[11px]">
+                                                    Upcoming
+                                                </StatusBadge>
+                                            )}
                                         </div>
-                                        <div className={`${fonts.body} mt-1 space-y-1 pl-6 text-base font-bold`}>
-                                            <p>Date/Day: {SCHEDULE.date}</p>
-                                            <p>Routine Category: {SCHEDULE.category}</p>
-                                        </div>
+
+                                        {upcomingSession ? (
+                                            <div className={`${fonts.body} mt-1 space-y-1 pl-6 text-base font-bold`}>
+                                                <p>
+                                                    Date/Day: {fmtDate(upcomingSession.date, { month: "short", day: "numeric", year: "numeric", weekday: "short" })}
+                                                    {" | "}{formatTime(upcomingSession.startTime)}
+                                                </p>
+                                                <p>Routine Category: {upcomingSession.routineCategory}</p>
+                                            </div>
+                                        ) : (
+                                            <div className="mt-1 pl-6">
+                                                <Empty>No upcoming session scheduled.</Empty>
+                                            </div>
+                                        )}
+
                                         <div className="mt-1 flex justify-end">
-                                            <a
-                                                href="/member/plan"
+                                            <Link
+                                                to="/member/workout-plan"
                                                 className={`link-underline ${fonts.mono} text-xs font-bold text-[#3b82f6] hover:text-[#60a5fa]`}
                                             >
                                                 Reschedule →
-                                            </a>
+                                            </Link>
                                         </div>
                                     </Card>
                                 </Animate>
@@ -240,22 +313,27 @@ function MemberDashboard() {
                                     <Card className="p-5">
                                         <div className="flex items-center justify-between">
                                             <h2 className={`${fonts.heading} text-lg`}>Recent Workout Log</h2>
-                                            <PillButton size="sm" href="/member/log">
-                                                View Logs
-                                            </PillButton>
+                                            <PillButton size="sm" to="/member/workout-log">View Logs</PillButton>
                                         </div>
                                         <div className="mt-2 h-px w-full bg-white/25" />
 
                                         <div className="mt-4 space-y-3">
-                                            {WORKOUT_LOG.map((w, i) => (
-                                                <WorkoutLogItem
-                                                    key={i}
-                                                    title={w.title}
-                                                    meta={w.meta}
-                                                    status={w.status}
-                                                    delay={0.7 + i * 0.08}
-                                                />
-                                            ))}
+                                            {recentWorkouts.length > 0 ? (
+                                                recentWorkouts.map((w, i) => (
+                                                    <WorkoutLogItem
+                                                        key={w.id}
+                                                        title={w.title}
+                                                        meta={[
+                                                            `${fmtDate(w.date, { month: "short", day: "numeric", year: "numeric" })} | ${w.durationMinutes} min | ${w.loadKg}kg`,
+                                                            `${w.exercisesCompleted}/${w.totalExercises} Exercises`,
+                                                        ]}
+                                                        status={w.status.toLowerCase()}
+                                                        delay={0.7 + i * 0.08}
+                                                    />
+                                                ))
+                                            ) : (
+                                                <Empty>No workouts logged yet.</Empty>
+                                            )}
                                         </div>
                                     </Card>
                                 </Animate>
@@ -268,15 +346,24 @@ function MemberDashboard() {
                             <Animate type="up" delay={0.6}>
                                 <Card className="h-full p-2.5" hover={false}>
                                     <div className="flex h-full flex-col gap-2.5">
-                                        {STATS.map((s, i) => (
-                                            <StatCard
-                                                key={s.label}
-                                                label={s.label}
-                                                value={s.value}
-                                                unit={s.unit}
-                                                delay={0.7 + i * 0.1}
-                                            />
-                                        ))}
+                                        {bodyStats ? (
+                                            [
+                                                { label: "Current Weight", value: bodyStats.weightKg, unit: "kg" },
+                                                { label: "Body fat %", value: bodyStats.bodyFatPercent, unit: "%" },
+                                                { label: "Muscle mass", value: bodyStats.muscleMassKg, unit: "kg" },
+                                                { label: "BMI Index", value: bodyStats.bmi, unit: "" },
+                                            ].map((s, i) => (
+                                                <StatCard
+                                                    key={s.label}
+                                                    label={s.label}
+                                                    value={s.value}
+                                                    unit={s.unit}
+                                                    delay={0.7 + i * 0.1}
+                                                />
+                                            ))
+                                        ) : (
+                                            <div className="p-2"><Empty>No body stats yet.</Empty></div>
+                                        )}
                                     </div>
                                 </Card>
                             </Animate>
@@ -287,9 +374,18 @@ function MemberDashboard() {
                                     <h2 className={`${fonts.heading} text-base`}>Updates</h2>
                                     <div className="mt-1 h-[3px] w-full rounded bg-white" />
                                     <div className="mt-4 space-y-3">
-                                        {UPDATES.map((u, i) => (
-                                            <UpdateItem key={u.title} {...u} delay={0.9 + i * 0.1} />
-                                        ))}
+                                        {notifications.length > 0 ? (
+                                            notifications.map((n, i) => (
+                                                <UpdateItem
+                                                    key={`${n.createdAt}-${i}`}
+                                                    title={n.title}
+                                                    date={fmtDateTime(n.createdAt)}
+                                                    delay={0.9 + i * 0.1}
+                                                />
+                                            ))
+                                        ) : (
+                                            <Empty>No updates.</Empty>
+                                        )}
                                     </div>
                                 </Card>
                             </Animate>
@@ -299,31 +395,37 @@ function MemberDashboard() {
                                 <Card className="flex h-full flex-col p-5">
                                     <h2 className={`${fonts.heading} text-base`}>Personal Trainer</h2>
 
-                                    <div className="mt-6 flex flex-1 items-center gap-5">
-                                        <img
-                                            src="/images/trainer.png"
-                                            alt={`Trainer ${TRAINER.name}`}
-                                            className="h-[127px] w-[137px] shrink-0 rounded-[25px] object-cover shadow-lg transition-transform duration-500 hover:scale-105"
-                                        />
-                                        <span className="anim-float text-white">
-                                            <Icon.Sparkle size={30} />
-                                        </span>
-                                        <div className="min-w-0 flex-1">
-                                            <p className={`${fonts.heading} text-xl`}>{TRAINER.name}</p>
-                                            <div className="my-2 h-px w-full bg-white/50" />
-                                            <p className={`${fonts.body} text-xs leading-snug`}>
-                                                Experience: {TRAINER.experience}
-                                                <br />
-                                                Current Clients: {TRAINER.clients}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    {trainer ? (
+                                        <>
+                                            <div className="mt-6 flex flex-1 items-center gap-5">
+                                                <img
+                                                    src="/images/trainer.png"
+                                                    alt={`Trainer ${trainer.fullName}`}
+                                                    className="h-[127px] w-[137px] shrink-0 rounded-[25px] object-cover shadow-lg transition-transform duration-500 hover:scale-105"
+                                                />
+                                                <span className="anim-float text-white">
+                                                    <Icon.Sparkle size={30} />
+                                                </span>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className={`${fonts.heading} text-xl`}>{trainer.fullName}</p>
+                                                    <div className="my-2 h-px w-full bg-white/50" />
+                                                    <p className={`${fonts.body} text-xs leading-snug`}>
+                                                        Experience: {trainer.yearsOfExperience} years
+                                                        <br />
+                                                        Current Clients: {trainer.currentClients}
+                                                    </p>
+                                                </div>
+                                            </div>
 
-                                    <div className="mt-4 flex justify-center">
-                                        <PillButton size="sm" href="/member/trainer">
-                                            Trainer Profile
-                                        </PillButton>
-                                    </div>
+                                            <div className="mt-4 flex justify-center">
+                                                <PillButton size="sm" to="/member/trainer">Trainer Profile</PillButton>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="mt-6">
+                                            <Empty>No trainer assigned yet.</Empty>
+                                        </div>
+                                    )}
                                 </Card>
                             </Animate>
                         </div>
@@ -331,7 +433,7 @@ function MemberDashboard() {
                 </div>
             </div>
         </>
-    )
+    );
 }
 
-export default MemberDashboard
+export default MemberDashboard;

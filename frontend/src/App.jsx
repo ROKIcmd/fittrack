@@ -5,6 +5,8 @@ import WorkoutPlanPage from "./pages/Member/WorkoutPlanPage.jsx";
 import MemberDashboard from "./pages/MemberDash.jsx";
 import Login from "./pages/Login.jsx";
 import MemberSignup from "./pages/MemberSignup/MemberSignup.jsx";
+import { AuthProvider } from "./context/AuthContext";
+import RegistrationDetails from "./pages/RegistrationDetails/RegistrationDetails.jsx";
 
 const Placeholder = ({ title }) => (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -28,7 +30,7 @@ export default function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<MemberSignup/>} />
-                <Route path="/register/details" element={<Placeholder title="Register Step 2" />} />
+                <Route path="/register/details" element={<RegistrationDetails />} />
                 <Route path="/payment" element={<Placeholder title="Membership Payment" />} />
                 <Route path="/member/profile" element={<Placeholder title="Member Profile" />} />
 
@@ -40,14 +42,15 @@ export default function App() {
                 <Route path="/member/trainer" element={<Placeholder title="My Trainer" />} />
                 <Route path="/member/progress" element={<Placeholder title="Member Progress" />} />
 
-                {/* FE 3: Trainer Workspace */}
-                <Route path="/trainer/dashboard" element={<Placeholder title="Trainer Dashboard" />} />
-                <Route path="/trainer/workout-plans" element={<Placeholder title="Trainer Workout Plans" />} />
-                <Route path="/trainer/diet-plans" element={<Placeholder title="Trainer Diet Plans" />} />
-                <Route path="/trainer/rescheduling" element={<Placeholder title="Rescheduling Requests" />} />
-                <Route path="/trainer/body-metrics" element={<Placeholder title="Body Metrics" />} />
-                <Route path="/trainer/schedule" element={<Placeholder title="My Schedule" />} />
-            </Routes>
-        </BrowserRouter>
+                    {/* FE 3: Trainer Workspace */}
+                    <Route path="/trainer/dashboard" element={<Placeholder title="Trainer Dashboard" />} />
+                    <Route path="/trainer/workout-plans" element={<Placeholder title="Trainer Workout Plans" />} />
+                    <Route path="/trainer/diet-plans" element={<Placeholder title="Trainer Diet Plans" />} />
+                    <Route path="/trainer/rescheduling" element={<Placeholder title="Rescheduling Requests" />} />
+                    <Route path="/trainer/body-metrics" element={<Placeholder title="Body Metrics" />} />
+                    <Route path="/trainer/schedule" element={<Placeholder title="My Schedule" />} />
+                </Routes>
+            </BrowserRouter>
+        </AuthProvider>
     );
 }
