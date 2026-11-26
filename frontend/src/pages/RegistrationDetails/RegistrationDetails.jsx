@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../../components/Button/Button';
 import QrPanel from '../../components/QrPanel/QrPanel';
 import Select from '../../components/Select/Select';
 import TextField from '../../components/TextField/TextField';
-import { submitRegistrationDetails } from '../../services/registrationDetails';
+import { useAuth } from '../../context/AuthContext';
 import {
   getAge,
   validateBirthDate,
@@ -26,8 +27,7 @@ const MEMBERSHIP_OPTIONS = [
   { value: 'gold', label: 'Gold' },
 ];
 
-// Order used to focus the first invalid field (left column, then right).
-const FIELD_ORDER = ['name', 'birthDate', 'sex', 'weight', 'height', 'goal', 'type'];
+const FIELD_ORDER = ['name', 'birthDate', 'sex', 'weight', 'height', 'goal', 'type', 'referenceNumber'];
 
 const INITIAL_VALUES = {
   name: '',
@@ -37,6 +37,7 @@ const INITIAL_VALUES = {
   height: '',
   goal: '',
   type: '',
+  referenceNumber: '',
 };
 
 const INITIAL_SHAKE = Object.fromEntries(FIELD_ORDER.map((field) => [field, 0]));
@@ -46,34 +47,65 @@ function getErrors(values) {
     name: validateFullName(values.name),
     birthDate: validateBirthDate(values.birthDate),
     sex: validateRequiredChoice(values.sex, 'Please select your sex.'),
-    weight: validateWeightKg(values.weight), // optional
-    height: validateHeightM(values.height), // optional
+    weight: validateWeightKg(values.weight),
+    height: validateHeightM(values.height),
     goal: validateRequiredText(values.goal, 'Please enter your primary goal.'),
     type: validateRequiredChoice(values.type, 'Please choose a membership type.'),
+    referenceNumber: values.referenceNumber?.trim()
+      ? ''
+      : 'Please enter your payment reference number.',
   };
 }
 
 /**
- * Registration page: personal information, physical measurements and the
- * membership plan. Owns the form state and validation; the fields come from
- * the shared TextField / Select components.
- *
- * Props
- *  qrSrc             Payment QR image (from your backend). Placeholder if empty.
- *  referenceNumber   Payment reference to show in the read-only field.
- *  onProceed(data)   Called after a successful submit, e.g. to open Payment.
+ * Splits "LastName, FirstName MiddleName" or "FirstName LastName"
  */
+function splitFullName(fullName = '') {
+  const trimmed = fullName.trim();
+  if (trimmed.includes(',')) {
+    const [last, ...rest] = trimmed.split(',');
+    return {
+      firstName: rest.join(' ').trim() || 'Member',
+      lastName: last.trim() || 'User',
+    };
+  }
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0] || 'Member', lastName: 'User' };
+  }
+  return {
+    firstName: parts.slice(0, -1).join(' '),
+    lastName: parts[parts.length - 1],
+  };
+}
+
 export default function RegistrationDetails({
   qrSrc = '/assets/payment-qr.png',
-  referenceNumber = '',
+  referenceNumber: initialReference = '',
   onProceed,
 }) {
-  const [values, setValues] = useState(INITIAL_VALUES);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { register: authRegister } = useAuth();
+
+  // Retrieve credentials passed from step 1
+  const credentials = location.state;
+
+  // Protect route: redirect to step 1 if email or password are missing
+  useEffect(() => {
+    if (!credentials?.email || !credentials?.password) {
+      navigate('/register', { replace: true });
+    }
+  }, [credentials, navigate]);
+
+  const [values, setValues] = useState({
+    ...INITIAL_VALUES,
+    referenceNumber: initialReference,
+  });
   const [touched, setTouched] = useState({});
   const [shake, setShake] = useState(INITIAL_SHAKE);
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
   const [statusMessage, setStatusMessage] = useState('');
-  const [issuedReference, setIssuedReference] = useState('');
 
   const inputRefs = {
     name: useRef(null),
@@ -83,6 +115,7 @@ export default function RegistrationDetails({
     height: useRef(null),
     goal: useRef(null),
     type: useRef(null),
+    referenceNumber: useRef(null),
   };
 
   const errors = getErrors(values);
@@ -121,28 +154,38 @@ export default function RegistrationDetails({
       return;
     }
 
+    const { firstName, lastName } = splitFullName(values.name);
+
+    // Format payload to align with backend RegisterRequest
     const payload = {
-      name: values.name.trim(),
-      birthDate: values.birthDate,
-      age,
+      email: credentials.email,
+      password: credentials.password,
+      firstName,
+      lastName,
+      dateOfBirth: values.birthDate,
       sex: values.sex,
-      weightKg: values.weight === '' ? null : Number(values.weight),
-      heightM: values.height === '' ? null : Number(values.height),
+      age: age ? Number(age) : null,
+      weightKg: values.weight ? Number(values.weight) : null,
+      heightMeters: values.height ? Number(values.height) : null,
       primaryGoal: values.goal.trim(),
-      membershipType: values.type,
+      membershipTier: values.type.toUpperCase(),
+      billingCycle: 'MONTHLY',
+      referenceNumber: values.referenceNumber.trim(),
     };
 
     setStatus('loading');
     try {
-      const result = await submitRegistrationDetails(payload);
-      if (result.referenceNumber) setIssuedReference(result.referenceNumber);
-      setStatusMessage(
-        result.simulated
-          ? "Details look good. Nothing was saved – this page isn't connected to a backend yet."
-          : 'Your registration was saved.',
-      );
+      // Calls authService.register under the hood and updates AuthContext user state
+      const createdUser = await authRegister(payload);
+
+      setStatusMessage('Registration complete! Setting up your workspace…');
       setStatus('success');
       onProceed?.(payload);
+
+      // Navigate to Member Dashboard
+      setTimeout(() => {
+        navigate('/member/dashboard', { replace: true });
+      }, 700);
     } catch (error) {
       setStatusMessage(error.message || 'Something went wrong. Please try again.');
       setStatus('error');
@@ -342,14 +385,20 @@ export default function RegistrationDetails({
               </div>
 
               <TextField
+                ref={inputRefs.referenceNumber}
                 className="regd-reveal"
                 style={reveal(5)}
                 label="Reference Number:"
                 labelVisible
                 name="referenceNumber"
-                placeholder="000000000000000000000000000"
-                value={referenceNumber || issuedReference}
-                inputProps={{ readOnly: true, 'aria-readonly': 'true' }}
+                placeholder="Enter GCash / Maya Ref #"
+                value={values.referenceNumber}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={visibleError('referenceNumber')}
+                valid={isValid('referenceNumber')}
+                shakeSignal={shake.referenceNumber}
+                required
               />
             </div>
           </section>

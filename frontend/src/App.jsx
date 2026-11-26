@@ -7,6 +7,7 @@ import Login from "./pages/Login.jsx";
 import MemberSignup from "./pages/MemberSignup/MemberSignup.jsx";
 import { AuthProvider } from "./context/AuthContext";
 import RegistrationDetails from "./pages/RegistrationDetails/RegistrationDetails.jsx";
+import Registration from "./pages/Registration/Registration.jsx";
 
 const Placeholder = ({ title }) => (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -31,7 +32,7 @@ export default function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<MemberSignup/>} />
-                <Route path="/register/details" element={<RegistrationDetails />} />
+                <Route path="/register/details" element={<Registration />} />
                 <Route path="/payment" element={<Placeholder title="Membership Payment" />} />
                 <Route path="/member/profile" element={<Placeholder title="Member Profile" />} />
 
