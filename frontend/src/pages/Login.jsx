@@ -1,6 +1,9 @@
 import { useState } from "react"
 import { AnimationStyles } from "../Styles/Animations"
-function Login() {
+import { useAuth } from "../context/AuthContext"
+import { useNavigate } from "react-router-dom"
+
+function Login({ onLoginSuccess = () => {} }) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
@@ -8,6 +11,9 @@ function Login() {
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const [shakeKey, setShakeKey] = useState(0)
+
+    const { login } = useAuth()
+    const navigate = useNavigate()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -26,9 +32,17 @@ function Login() {
 
         setLoading(true)
         try {
-            // TODO: replace with your real auth call
-            await new Promise((r) => setTimeout(r, 1200))
-            console.log({ role, email, password })
+            const user = await login({ email, password, role })
+            onLoginSuccess(user)
+
+            if (user.role?.toUpperCase() === "TRAINER") {
+                navigate("/trainer/dashboard")
+            } else {
+                navigate("/member/dashboard")
+            }
+        } catch (err) {
+            setError(err.message || "Unable to sign in.")
+            setShakeKey((k) => k + 1)
         } finally {
             setLoading(false)
         }
@@ -228,7 +242,7 @@ function Login() {
                         <p className="anim-up delay-6 mt-8 font-['Goudy_Old_Style','Georgia',serif] text-2xl text-[#f1f5f9]">
                             Need an account?{" "}
                             <a
-                                href="#"
+                                href="/register"
                                 className="link-underline text-[#60a5fa] transition-colors hover:text-[#93c5fd]"
                             >
                                 Sign up

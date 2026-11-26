@@ -31,6 +31,63 @@ export function validateConfirmPassword(value, password) {
   return '';
 }
 
+/* ---- Registration details validators ------------------------------------------- */
+
+export function validateFullName(value) {
+  const name = value.trim();
+  if (!name) return 'Please enter your full name.';
+  if (name.length < 2) return 'That name looks too short.';
+  return '';
+}
+
+/** Age in whole years from a "YYYY-MM-DD" string, or '' if it can't be read. */
+export function getAge(dateString, today = new Date()) {
+  if (!dateString) return '';
+  const [year, month, day] = dateString.split('-').map(Number);
+  if (!year || !month || !day) return '';
+
+  let age = today.getFullYear() - year;
+  const currentMonth = today.getMonth() + 1;
+  const hadBirthday = currentMonth > month || (currentMonth === month && today.getDate() >= day);
+  if (!hadBirthday) age -= 1;
+  return age;
+}
+
+export function validateBirthDate(value, today = new Date()) {
+  if (!value) return 'Please choose your date of birth.';
+  const age = getAge(value, today);
+  if (age === '') return 'Enter a valid date.';
+  if (age < 0) return "Date of birth can't be in the future.";
+  if (age > 120) return 'Please check the year of birth.';
+  return '';
+}
+
+export function validateRequiredChoice(value, message = 'Please choose an option.') {
+  return value ? '' : message;
+}
+
+export function validateRequiredText(value, message = 'This field is required.') {
+  return value.trim() ? '' : message;
+}
+
+/** Optional field: empty is fine, a filled value must be a sensible weight. */
+export function validateWeightKg(value) {
+  if (value === '') return '';
+  const kg = Number(value);
+  if (!Number.isFinite(kg) || kg < 20 || kg > 400) return 'Enter a weight between 20 and 400 kg.';
+  return '';
+}
+
+/** Optional field: height is entered in metres, e.g. 1.75. */
+export function validateHeightM(value) {
+  if (value === '') return '';
+  const metres = Number(value);
+  if (!Number.isFinite(metres) || metres < 0.5 || metres > 2.5) {
+    return 'Enter your height in metres, like 1.75.';
+  }
+  return '';
+}
+
 const STRENGTH_LABELS = ['Too weak', 'Weak', 'Fair', 'Good', 'Strong'];
 
 /**

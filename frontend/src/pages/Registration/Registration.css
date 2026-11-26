@@ -1,0 +1,335 @@
+/* ==========================================================================
+   Registration page
+   Design reference: Figma frame "Registratio" (13:91), 1279 × 761.
+   Columns, offsets and type sizes below come from that frame; the page is
+   anchored to the centre line so it scales with the window.
+   ========================================================================== */
+
+.reg {
+  --reg-left: max(16px, calc(50% - 479.5px)); /* Figma: left column starts at x = 160 */
+
+  /* Estimate of Figma "Rectangle 4": a dark navy veil over the gym photo.
+     Replace with the exported overlay if you need pixel parity. */
+  --reg-overlay: linear-gradient(180deg, rgba(15, 23, 42, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+
+  position: relative;
+  display: grid;
+  align-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 47px 0 19px; /* Figma: title text starts at y = 47 */
+  background: var(--color-bg);
+  overflow: hidden;
+  isolation: isolate;
+
+  /* Shared TextField styling for this page (Figma: white 24px labels,
+     text starts 45px inside wide pills) */
+  --tf-label-size: 24px;
+  --tf-label-color: #fff;
+  --tf-padding-left: 45px;
+}
+
+/* ---- Photo + overlay --------------------------------------------------- */
+
+.reg__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  animation: reg-fade 1200ms var(--ease-out) backwards;
+}
+
+/* Figma crop: image is 111.72% of the frame width and shifted up so the
+   dumbbell racks fill the view. Translating by a % of its own height keeps
+   that crop at any window width. */
+.reg__photo-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 111.72%;
+  max-width: none;
+  height: auto;
+  transform: translateY(-38.4%);
+}
+
+.reg__shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--reg-overlay);
+}
+
+/* ---- Title ------------------------------------------------------------- */
+
+.reg__title {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4.07vw, 52px);
+  font-weight: 400;
+  line-height: 1.12; /* ≈58px at 52px: headings sit right under it, as in Figma */
+  text-align: center;
+}
+
+/* ---- Content layout ---------------------------------------------------- */
+
+.reg__content {
+  /* Spans x = 160 → 1240 in the design (right column + the button overhang) */
+  width: min(1080px, calc(100% - var(--reg-left) - 16px));
+  margin-left: var(--reg-left);
+}
+
+.reg__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  width: min(1000px, 100%);
+}
+
+.reg__col {
+  min-width: 0;
+}
+
+/* Per-column rhythm taken from the Figma label/field spacing */
+.reg__col--left {
+  --tf-label-gap: 6px;
+  --tf-label-indent: 14px;
+  --reg-row-gap: 8px;
+  --reg-heading-shift: -10px; /* heading x = 150, fields x = 160 */
+}
+
+.reg__col--right {
+  --tf-label-gap: 3px;
+  --tf-label-indent: 7px;
+  --reg-row-gap: 0px;
+  --reg-heading-shift: 0px;
+}
+
+.reg__heading {
+  margin: 0 0 20px var(--reg-heading-shift);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.13vw, 40px);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.reg__subheading {
+  /* Figma: x = 148, 30px type. Margins are net of the 8px flex gap above and below. */
+  margin: 11px 0 -6px -12px;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.35vw, 30px);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.reg__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--reg-row-gap);
+}
+
+/* Two narrow pills side by side (Figma: 189 + 58 gap + 189) */
+.reg__row {
+  --tf-padding-left: 24px;
+  --tf-padding-right: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 58px;
+  align-items: start;
+}
+
+/* Narrow dropdown: keep "Male/Female" fully visible next to the chevron */
+.reg__row .tf__select {
+  padding-right: 20px;
+}
+
+/* ---- Divider ------------------------------------------------------------ */
+
+.reg__divider {
+  align-self: stretch;
+  width: 3px;
+  margin: 52px 81px 6px 44px; /* Figma: x = 640, y = 157 → 642 */
+  border-radius: 2px;
+  background: #fff;
+}
+
+/* ---- QR block ----------------------------------------------------------- */
+
+.reg__qr-label {
+  margin: 0 0 var(--tf-label-gap) var(--tf-label-indent);
+  color: #fff;
+  font: 24px/1.2 var(--font-body);
+}
+
+.reg__qr .qr {
+  margin-left: 161px; /* Figma: QR x = 885, column x = 724 */
+  margin-bottom: 0;
+}
+
+/* ---- Footer: status + button -------------------------------------------- */
+
+.reg__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  margin-top: 36px; /* Figma: button y = 684 */
+}
+
+.reg__status {
+  flex: 1;
+  margin: 0;
+  color: var(--color-text-on-dark);
+  font: 17px/1.35 var(--font-body);
+  text-align: right;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.reg__status.is-open {
+  opacity: 1;
+  transform: none;
+}
+
+.reg__status--success {
+  color: var(--color-success-text);
+}
+
+.reg__status--error {
+  color: var(--color-error-text);
+}
+
+/* ---- Entrance animation (staggered via --i) ----------------------------- */
+
+.reg-reveal {
+  animation: reg-rise 650ms var(--ease-out) backwards;
+  animation-delay: calc(100ms + var(--i, 0) * 50ms);
+}
+
+/* ---- Laptop: a little tighter ------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .reg__row {
+    column-gap: 24px;
+  }
+
+  .reg__divider {
+    margin-inline: 24px 40px;
+  }
+
+  .reg__qr .qr {
+    margin-left: clamp(0px, 8vw, 80px);
+  }
+}
+
+/* ---- Tablet / mobile: one column ---------------------------------------- */
+
+@media (max-width: 860px) {
+  .reg {
+    --reg-overlay: linear-gradient(180deg, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.92));
+    --tf-padding-left: 28px;
+    padding-top: 32px;
+  }
+
+  .reg__photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: none;
+  }
+
+  .reg__content {
+    width: min(560px, calc(100% - 32px));
+    margin-inline: auto;
+  }
+
+  .reg__body {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    row-gap: 24px;
+  }
+
+  .reg__col--left,
+  .reg__col--right {
+    --tf-label-gap: 6px;
+    --tf-label-indent: 14px;
+    --reg-row-gap: 10px;
+    --reg-heading-shift: 0px;
+  }
+
+  .reg__heading {
+    margin-bottom: 12px;
+  }
+
+  .reg__subheading {
+    margin-left: 0;
+  }
+
+  .reg__row {
+    column-gap: 16px;
+  }
+
+  .reg__divider {
+    width: 100%;
+    height: 3px;
+    margin: 0;
+  }
+
+  .reg__qr .qr {
+    margin-left: 14px;
+  }
+
+  .reg__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .reg__actions .btn {
+    width: 100%;
+  }
+
+  .reg__status {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .reg {
+    --tf-label-size: 20px;
+    --tf-height: 56px;
+    --tf-radius: 28px;
+    --tf-font-size: 18px;
+  }
+
+  .reg__row {
+    --tf-padding-left: 18px;
+    --tf-padding-right: 10px;
+  }
+}
+
+/* ---- Keyframes ----------------------------------------------------------- */
+
+@keyframes reg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reg-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

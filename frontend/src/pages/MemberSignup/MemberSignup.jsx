@@ -1,16 +1,12 @@
 import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '../../components/Button/Button';
 import Checkbox from '../../components/Checkbox/Checkbox';
 import { LockIcon, MailIcon } from '../../components/Icons/Icons';
 import Logo from '../../components/Logo/Logo';
 import PasswordStrength from '../../components/PasswordStrength/PasswordStrength';
 import TextField from '../../components/TextField/TextField';
-import { registerMember } from '../../services/auth';
-import {
-  validateConfirmPassword,
-  validateEmail,
-  validatePassword,
-} from '../../utils/validators';
+import { checkEmail } from '../../services/authService';
 import './MemberSignup.css';
 
 const FIELD_ORDER = ['email', 'password', 'confirmPassword', 'confirmed'];
@@ -25,23 +21,35 @@ const INITIAL_VALUES = {
 const INITIAL_SHAKE = { email: 0, password: 0, confirmPassword: 0, confirmed: 0 };
 
 function getErrors(values) {
+  const email = values.email.trim();
+  const password = values.password;
+
+  let emailError = '';
+  if (!email) emailError = 'Email is required.';
+  else if (!/^\S+@\S+\.\S+$/.test(email)) emailError = 'Please enter a valid email address.';
+
+  let passwordError = '';
+  if (!password) passwordError = 'Password is required.';
+  else if (password.length < 6) passwordError = 'Password must be at least 6 characters.';
+
+  let confirmError = '';
+  if (!values.confirmPassword) confirmError = 'Please verify your password.';
+  else if (values.confirmPassword !== password) confirmError = 'Passwords do not match.';
+
   return {
-    email: validateEmail(values.email),
-    password: validatePassword(values.password),
-    confirmPassword: validateConfirmPassword(values.confirmPassword, values.password),
+    email: emailError,
+    password: passwordError,
+    confirmPassword: confirmError,
     confirmed: values.confirmed ? '' : 'Please tick “Confirm Password” to continue.',
   };
 }
 
-/**
- * Member Sign Up page. Owns the form state and validation, and assembles the
- * reusable components. Submitting runs `registerMember` (src/services/auth.js).
- */
-export default function MemberSignup({ loginHref = '/login', onLoginClick }) {
+export default function MemberSignup({ loginHref = '/login' }) {
+  const navigate = useNavigate();
   const [values, setValues] = useState(INITIAL_VALUES);
   const [touched, setTouched] = useState({});
   const [shake, setShake] = useState(INITIAL_SHAKE);
-  const [status, setStatus] = useState('idle'); // idle | loading | success | error
+  const [status, setStatus] = useState('idle');
   const [statusMessage, setStatusMessage] = useState('');
 
   const inputRefs = {
@@ -59,7 +67,7 @@ export default function MemberSignup({ loginHref = '/login', onLoginClick }) {
     const { name, type, value, checked } = event.target;
     setValues((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     if (name === 'confirmed') setTouched((prev) => ({ ...prev, confirmed: true }));
-    if (status === 'success' || status === 'error') setStatus('idle');
+    if (status === 'error') setStatus('idle');
   }
 
   function handleBlur(event) {
@@ -69,7 +77,7 @@ export default function MemberSignup({ loginHref = '/login', onLoginClick }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (status === 'loading' || status === 'success') return;
+    if (status === 'loading') return;
 
     setTouched({ email: true, password: true, confirmPassword: true, confirmed: true });
 
@@ -77,9 +85,7 @@ export default function MemberSignup({ loginHref = '/login', onLoginClick }) {
     if (invalidFields.length > 0) {
       setShake((prev) => {
         const next = { ...prev };
-        invalidFields.forEach((name) => {
-          next[name] += 1;
-        });
+        invalidFields.forEach((name) => { next[name] += 1; });
         return next;
       });
       inputRefs[invalidFields[0]].current?.focus();
@@ -88,24 +94,24 @@ export default function MemberSignup({ loginHref = '/login', onLoginClick }) {
 
     setStatus('loading');
     try {
-      const result = await registerMember({
-        email: values.email.trim(),
-        password: values.password,
+      const cleanEmail = values.email.trim();
+      // Validate email availability with backend
+      await checkEmail(cleanEmail);
+
+      setStatus('idle');
+      // Pass verified credentials to step 2
+      navigate('/register/details', {
+        state: { email: cleanEmail, password: values.password },
       });
-      setStatusMessage(
-        result.simulated
-          ? "Your details look good. No account was created – this page isn't connected to a backend yet."
-          : 'Your account has been created.',
-      );
-      setStatus('success');
     } catch (error) {
-      setStatusMessage(error.message || 'Something went wrong. Please try again.');
+      setStatusMessage(error.message || 'Email is already taken or invalid.');
       setStatus('error');
+      setShake((prev) => ({ ...prev, email: prev.email + 1 }));
     }
   }
 
   const reveal = (index) => ({ '--i': index });
-  const statusOpen = status === 'success' || status === 'error';
+  const statusOpen = status === 'error';
 
   return (
     <main className="signup">
@@ -203,12 +209,8 @@ export default function MemberSignup({ loginHref = '/login', onLoginClick }) {
             />
 
             <div className="signup__actions signup-reveal" style={reveal(5)}>
-              <Button
-                type="submit"
-                loading={status === 'loading'}
-                success={status === 'success'}
-              >
-                {status === 'success' ? 'Done' : 'Register'}
+              <Button type="submit" loading={status === 'loading'}>
+                Continue
               </Button>
             </div>
 
@@ -226,10 +228,7 @@ export default function MemberSignup({ loginHref = '/login', onLoginClick }) {
           <hr className="signup__divider signup-reveal" style={reveal(6)} />
 
           <p className="signup__footer signup-reveal" style={reveal(7)}>
-            Already have an account?{' '}
-            <a href={loginHref} onClick={onLoginClick}>
-              Log In
-            </a>
+            Already have an account? <a href={loginHref}>Log In</a>
           </p>
         </section>
 

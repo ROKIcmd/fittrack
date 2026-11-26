@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Animate, CountUp } from "../Styles/Animations"
+import { Link } from "react-router-dom";
 
 /* ------------------------------------------------------------------ */
 /* Design tokens (taken from the Figma file)                           */
@@ -129,7 +130,8 @@ export function CardTitle({ children, className = "", rule = true }) {
 export function PillButton({
                                variant = "solid",
                                size = "md",
-                               as: Tag = "a",
+                               to,
+                               href,
                                className = "",
                                children,
                                ...props
@@ -144,21 +146,30 @@ export function PillButton({
         outline:
             "border-2 border-[#3b82f6] bg-transparent text-[#3b82f6] hover:bg-[#3b82f6] hover:text-white",
     }
-    return (
-        <Tag
-            className={`btn-shine inline-flex cursor-pointer items-center justify-center gap-1 rounded-full font-bold transition-all duration-300 hover:-translate-y-0.5 active:scale-95 ${fonts.mono} ${sizes[size]} ${variants[variant]} ${className}`}
-            {...props}
-        >
-            {children}
-        </Tag>
-    )
+    const cls = `btn-shine inline-flex cursor-pointer items-center justify-center gap-1 rounded-full font-bold transition-all duration-300 hover:-translate-y-0.5 active:scale-95 ${fonts.mono} ${sizes[size]} ${variants[variant]} ${className}`
+
+    if (to) {
+        return <Link to={to} className={cls} {...props}>{children}</Link>
+    }
+    return <a href={href} className={cls} {...props}>{children}</a>
 }
 
 const STATUS_STYLES = {
     completed: "border-[#71f360] bg-[#71f360]/20 text-[#16c000]",
     rescheduled: "border-white bg-[#d3b4aa]/50 text-white",
+    no_show: "border-red-400 bg-red-500/20 text-red-300",
+    expired: "border-red-400 bg-red-500/20 text-red-300",
     active: "border-2 border-[#71f360] bg-[#1f2937] text-[#71f360]",
     upcoming: "border-2 border-[#3b82f6] bg-transparent text-[#3b82f6]",
+}
+
+const STATUS_LABELS = {
+    completed: "Completed",
+    rescheduled: "Rescheduled",
+    no_show: "No Show",
+    expired: "Expired",
+    active: "Active",
+    upcoming: "Upcoming",
 }
 
 export function StatusBadge({ status = "completed", children, className = "" }) {
@@ -244,7 +255,7 @@ export function WorkoutLogItem({ title, meta, status, delay = 0 }) {
                 </p>
             </div>
             <StatusBadge status={status} className="shrink-0 !px-3 !py-1 !text-[11px]">
-                {status === "completed" ? "Completed" : "Rescheduled"}
+                {STATUS_LABELS[status] ?? status}
             </StatusBadge>
         </Animate>
     )
@@ -284,8 +295,8 @@ export function Logo({ compact = false }) {
 export function SidebarNavItem({ icon: IconComp, label, href = "#", active = false, delay = 0 }) {
     return (
         <Animate as="li" type="left" delay={delay}>
-            <a
-                href={href}
+            <Link
+                to={href}
                 aria-current={active ? "page" : undefined}
                 className={`group flex items-center gap-3 rounded-xl px-2 py-1.5 text-xs font-medium transition-all duration-300 hover:translate-x-1 hover:bg-white/5 ${fonts.ui} ${
                     active ? "text-[#3b82f6]" : "text-white"
@@ -296,7 +307,7 @@ export function SidebarNavItem({ icon: IconComp, label, href = "#", active = fal
                     className="shrink-0 transition-transform duration-300 group-hover:scale-110"
                 />
                 {label}
-            </a>
+            </Link>
         </Animate>
     )
 }
@@ -431,8 +442,8 @@ export function LineChart({
     const yMin = Math.min(...yTicks)
     const yMax = Math.max(...yTicks)
 
-    const sx = (x) => pad.left + ((x - xMin) / (xMax - xMin)) * (W - pad.left - pad.right)
-    const sy = (y) => H - pad.bottom - ((y - yMin) / (yMax - yMin)) * (H - pad.top - pad.bottom)
+    const sx = (x) => pad.left + ((x - xMin) / ((xMax - xMin) || 1)) * (W - pad.left - pad.right)
+    const sy = (y) => H - pad.bottom - ((y - yMin) / ((yMax - yMin) || 1)) * (H - pad.top - pad.bottom)
 
     const line = data.map((d, i) => `${i ? "L" : "M"}${sx(d.x)},${sy(d.y)}`).join(" ")
     const area = `${line} L${sx(xMax)},${H - pad.bottom} L${sx(xMin)},${H - pad.bottom} Z`
