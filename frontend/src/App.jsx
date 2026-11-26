@@ -5,7 +5,7 @@ import LandingPage from "./pages/LandingPage.jsx";
 import WorkoutLogPage from "./pages/Member/WorkoutLogPage.jsx";
 import MemberDashboard from "./pages/MemberDash.jsx";
 import { AuthProvider } from "./context/AuthContext";
-
+import RegistrationDetails from "./pages/RegistrationDetails/RegistrationDetails.jsx";
 
 const Placeholder = ({ title }) => (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -29,9 +29,9 @@ export default function App() {
                     {/* FE 1: Public & Auth */}
 
                     <Route path="/" element={<LandingPage />} />
-                    <Route path="/login" element={< Login/>} />
+                    <Route path="/login" element={<Login/>} />
                     <Route path="/register" element={<MemberSignup />} />
-                    <Route path="/register/details" element={<Placeholder title="Register Step 2" />} />
+                    <Route path="/register/details" element={<RegistrationDetails />} />
                     <Route path="/payment" element={<Placeholder title="Membership Payment" />} />
                     <Route path="/member/profile" element={<Placeholder title="Member Profile" />} />
 
