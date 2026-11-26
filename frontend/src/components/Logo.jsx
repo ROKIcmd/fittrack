@@ -16,6 +16,7 @@ export default function Logo({ size = "md", className = "" }) {
         <path d="M30 8h12v12" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <span className={`font-sans font-bold tracking-tight text-white ${s.text}`}>FitTrack</span>
+
     </Link>
   );
 }

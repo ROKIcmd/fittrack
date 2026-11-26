@@ -82,6 +82,14 @@ export function AlertIcon(props) {
   );
 }
 
+export function ChevronDownIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="m6 9 6 6 6-6" />
+    </Icon>
+  );
+}
+
 /** Open ring segment – rotate it with CSS to make a loading spinner. */
 export function SpinnerIcon(props) {
   return (
