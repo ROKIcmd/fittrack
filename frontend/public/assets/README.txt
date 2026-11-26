@@ -1,4 +1,4 @@
-Put these files from Figma in this folder (the sandbox this was built in
+dPut these files from Figma in this folder (the sandbox this was built in
 could not download from figma.com):
 
   gym-bg.png            Figma node 13:43 "image 3" -> export the ORIGINAL image.
