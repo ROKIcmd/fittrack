@@ -24,6 +24,7 @@ const Placeholder = ({ title }) => (
 
 export default function App() {
     return (
+        <AuthProvider>
         <BrowserRouter>
             <Routes>
                 {/* FE 1: Public & Auth */}
