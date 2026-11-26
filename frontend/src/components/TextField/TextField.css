@@ -1,7 +1,9 @@
 /* ==========================================================================
    TextField – reusable animated input
    Customise with CSS variables on the element or any ancestor:
-   --tf-height, --tf-radius, --tf-bg, --tf-font-size, --tf-gap
+   --tf-height, --tf-radius, --tf-bg, --tf-font-size, --tf-gap,
+   --tf-padding-left, --tf-padding-right,
+   --tf-label-size, --tf-label-color, --tf-label-gap, --tf-label-indent
    Figma defaults: 64px tall, 30px radius, #f1f5f9, 24px Goudy Old Style.
    ========================================================================== */
 
@@ -11,9 +13,11 @@
 
 .tf__label {
   display: block;
-  margin: 0 0 8px 18px;
-  font: 18px/1.2 var(--font-body);
-  color: var(--color-text-on-dark);
+  margin: 0 0 var(--tf-label-gap, 8px) var(--tf-label-indent, 18px);
+  font-family: var(--font-body);
+  font-size: var(--tf-label-size, 18px);
+  line-height: 1.2;
+  color: var(--tf-label-color, var(--color-text-on-dark));
 }
 
 /* ---- Field shell ------------------------------------------------------- */
@@ -26,7 +30,7 @@
   align-items: center;
   gap: var(--tf-gap, 14px);
   height: var(--tf-height, 64px);
-  padding-inline: 18px;
+  padding-inline: var(--tf-padding-left, 18px) var(--tf-padding-right, 18px);
   background: var(--tf-bg, var(--color-field));
   border-radius: var(--tf-radius, var(--radius-field));
   box-shadow: 0 0 0 3px var(--tf-ring), 0 0 22px var(--tf-glow);
@@ -133,6 +137,28 @@
 
 .tf__input:disabled {
   cursor: not-allowed;
+}
+
+/* Number inputs: no spinner arrows inside the pill */
+.tf__input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.tf__input[type='number']::-webkit-inner-spin-button,
+.tf__input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Date inputs: grey "mm/dd/yyyy" hint while empty, softer calendar icon */
+.tf__input[type='date'][data-empty='true']:not(:focus) {
+  color: var(--color-placeholder);
+}
+
+.tf__input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+  cursor: pointer;
 }
 
 /* Keep browser autofill from painting its own yellow/blue background */
