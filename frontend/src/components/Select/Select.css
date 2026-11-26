@@ -1,0 +1,42 @@
+/* Select reuses the TextField pill (TextField.css). Only dropdown-specific
+   bits live here. */
+
+.tf__select {
+  padding-right: 28px; /* room for the chevron */
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  text-overflow: ellipsis;
+}
+
+.tf__select.is-placeholder {
+  color: var(--color-placeholder);
+}
+
+.tf__select option {
+  color: var(--color-field-text);
+}
+
+.tf__chevron {
+  position: absolute;
+  top: 50%;
+  right: var(--tf-padding-right, 18px);
+  display: grid;
+  place-items: center;
+  color: var(--color-icon);
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out);
+}
+
+/* Chevron flips and turns blue while the dropdown has focus */
+.tf__field:focus-within .tf__chevron {
+  color: var(--color-primary);
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.tf__field.is-invalid .tf__chevron {
+  color: var(--color-error);
+}

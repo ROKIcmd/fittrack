@@ -117,6 +117,7 @@ const TextField = forwardRef(function TextField(
           disabled={disabled}
           autoComplete={autoComplete}
           inputMode={inputMode}
+          data-empty={value ? 'false' : 'true'}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={active ? messageId : undefined}
           {...inputProps}
@@ -139,7 +140,8 @@ const TextField = forwardRef(function TextField(
           </button>
         ) : (
           valid &&
-          !error && (
+          !error &&
+          type !== 'date' && (
             <span className="tf__status" aria-hidden="true">
               <CheckIcon size={22} strokeWidth={2.5} />
             </span>

@@ -7,7 +7,7 @@ export default function MemberLayout({ pageTitle, PageIcon = ClipboardList, user
     <div className="relative min-h-screen bg-[#090e16] font-body text-white">
       <div
         className="absolute inset-0 bg-cover bg-top animate-fade-in"
-        style={{ backgroundImage: "url('/assets/hero-gym.png')" }}
+        style={{ backgroundImage: "url('/assets/hero-image.jpg')" }}
       />
       <div className="absolute inset-0 bg-black/70" />
 

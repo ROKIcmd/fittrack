@@ -242,7 +242,7 @@ function Login({ onLoginSuccess = () => {} }) {
                         <p className="anim-up delay-6 mt-8 font-['Goudy_Old_Style','Georgia',serif] text-2xl text-[#f1f5f9]">
                             Need an account?{" "}
                             <a
-                                href="#"
+                                href="/register"
                                 className="link-underline text-[#60a5fa] transition-colors hover:text-[#93c5fd]"
                             >
                                 Sign up
