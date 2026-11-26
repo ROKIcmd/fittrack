@@ -1,0 +1,726 @@
+/* ==========================================================================
+   Trainer Details page
+   Design reference: Figma frame "Trauner profile" (48:66), 1279 × 769.
+
+   Fully scoped: every class starts with "trdt", every custom property is
+   declared on .trdt (not :root), and nothing here styles html/body or any
+   element outside this page. The only things read from the shared global
+   CSS are the font tokens (--font-*), each with its own fallback.
+   ========================================================================== */
+
+/* Fonts used by this page, so it works without touching index.html. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Oswald:wght@600&family=Goudy+Bookletter+1911&family=Google+Sans+Code:wght@700&display=swap');
+
+.trdt {
+  /* Colors – Figma */
+  --trdt-bg: #090e16;
+  --trdt-panel: #1f2937;
+  --trdt-border: #2b394c;
+  --trdt-blue: #3b82f6;
+  --trdt-blue-soft: #60a5fa;
+  --trdt-blue-hover: #5b9bf8;
+  --trdt-muted: #afbdcf;
+  --trdt-logo: #f8fafc;
+  --trdt-avatar: #d9d9d9;
+  /* Estimate: Figma's stroke colors for the thin rules weren't readable */
+  --trdt-rule: rgba(148, 163, 184, 0.5);
+
+  /* Fonts – Figma families, same stacks as the shared tokens */
+  --trdt-display: var(--font-display, 'Britannic Bold', 'Oswald', 'Abril Fatface', Georgia, serif);
+  --trdt-body: var(--font-body, 'Goudy Old Style', 'Goudy Bookletter 1911', Georgia, serif);
+  --trdt-mono: var(--font-mono, 'Google Sans Code', ui-monospace, 'SFMono-Regular', Menlo, monospace);
+  --trdt-ui: var(--font-ui, 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif);
+
+  --trdt-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 154px minmax(0, 1fr);
+  column-gap: 19px; /* Figma: sidebar ends x = 175, card starts x = 194 */
+  align-items: stretch;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 23px 43px 25px 21px;
+  overflow: hidden;
+  background: var(--trdt-bg);
+  color: #fff;
+  font-family: var(--trdt-ui);
+  line-height: normal;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* :where() keeps these resets at zero specificity so component classes win */
+.trdt,
+:where(.trdt) *,
+:where(.trdt) *::before,
+:where(.trdt) *::after {
+  box-sizing: border-box;
+}
+
+:where(.trdt) h1,
+:where(.trdt) h2,
+:where(.trdt) h3,
+:where(.trdt) p,
+:where(.trdt) dl,
+:where(.trdt) dd,
+:where(.trdt) ul {
+  margin: 0;
+  padding: 0;
+}
+
+:where(.trdt) ul {
+  list-style: none;
+}
+
+:where(.trdt) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:where(.trdt) img,
+:where(.trdt) svg {
+  display: block;
+}
+
+/* ---- Entrance animation -------------------------------------------------- */
+
+@keyframes trdt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes trdt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.trdt-reveal {
+  animation: trdt-rise 700ms var(--trdt-ease) backwards;
+  animation-delay: var(--trdt-delay, 0ms);
+}
+
+/* ---- Background ---------------------------------------------------------- */
+
+.trdt__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  animation: trdt-fade 900ms var(--trdt-ease) backwards;
+}
+
+/* Figma "image 5": 1110 × 833, right-aligned, top at y = -417 */
+.trdt__bg-img {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 86.79%;
+  max-width: none;
+  aspect-ratio: 1110 / 833;
+  height: auto;
+  object-fit: cover;
+  transform: translateY(-50.06%);
+}
+
+/* Figma: 70 % black over the photo */
+.trdt__veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* ---- Sidebar (Figma: x 21, y 23, 154 × 713, radius 25) ------------------- */
+
+.trdt__side {
+  display: flex;
+  flex-direction: column;
+  min-height: 713px;
+  border-radius: 25px;
+  background: var(--trdt-panel);
+}
+
+.trdt__brand {
+  position: relative;
+  flex: none;
+  height: 174px;
+}
+
+.trdt__emblem {
+  position: absolute;
+  left: 15px;
+  top: 15px;
+  width: 21px;
+  height: 24.5px;
+}
+
+.trdt__brand-name {
+  position: absolute;
+  left: 49px;
+  top: 6px;
+  color: var(--trdt-logo);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 48px;
+  white-space: nowrap;
+}
+
+.trdt__tagline {
+  position: absolute;
+  left: 15px;
+  top: 58px;
+  color: var(--trdt-muted);
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 15px;
+  white-space: nowrap;
+}
+
+.trdt__nav {
+  flex: none;
+}
+
+.trdt__nav-link {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding-left: 11px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+  transition:
+    color 200ms var(--trdt-ease),
+    background-color 200ms var(--trdt-ease);
+}
+
+.trdt__nav-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  transition: transform 220ms var(--trdt-ease);
+}
+
+.trdt__nav-link:hover {
+  color: var(--trdt-blue-soft);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.trdt__nav-link:hover .trdt__nav-icon {
+  transform: translateX(2px);
+}
+
+.trdt__nav-link.is-active {
+  color: var(--trdt-blue);
+  background: none;
+}
+
+.trdt__nav-link.is-active .trdt__nav-icon {
+  transform: none;
+}
+
+.trdt__nav-link:focus-visible,
+.trdt__bell:focus-visible,
+.trdt__button:focus-visible {
+  outline: 2px solid var(--trdt-blue-soft);
+  outline-offset: 2px;
+}
+
+/* Logout block (Figma: rule at y 665, row at y 683) */
+.trdt__side-foot {
+  margin-top: auto;
+  padding: 0 25px 33px 27px;
+}
+
+.trdt__side-foot::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin-bottom: 17px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.trdt__logout {
+  gap: 3px; /* Figma: 18px icon, label at x 72 */
+  height: 20px;
+  padding-left: 0;
+}
+
+/* ---- Main column --------------------------------------------------------- */
+
+.trdt__main {
+  min-width: 0;
+}
+
+/* Figma: top bar y 23 → 100 */
+.trdt__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  height: 77px;
+}
+
+.trdt__crumb {
+  display: flex;
+  align-items: center;
+  height: 29px;
+  margin: 18px 0 0 21px;
+}
+
+.trdt__crumb-icon {
+  display: grid;
+  place-items: center;
+}
+
+.trdt__crumb-divider {
+  width: 2px;
+  height: 29px;
+  margin: 0 7px 0 14px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.trdt__crumb-label {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+/* Profile pill (Figma: 235 × 77, radius 50) */
+.trdt__user {
+  display: flex;
+  flex: none;
+  align-items: center;
+  width: 235px;
+  height: 77px;
+  padding-left: 12px;
+  margin-right: -6px; /* Figma: pill ends 6px past the card's right edge */
+  border-radius: 50px;
+  background: var(--trdt-panel);
+}
+
+.trdt__bell {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 35px;
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  transition: transform 220ms var(--trdt-ease);
+}
+
+.trdt__bell:hover {
+  transform: rotate(-12deg) scale(1.06);
+}
+
+.trdt__user-divider {
+  flex: none;
+  width: 3px;
+  height: 47px;
+  margin: 0 8px 0 13px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.trdt__avatar {
+  flex: none;
+  width: 51px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--trdt-avatar);
+}
+
+.trdt__user-name {
+  min-width: 0;
+  max-width: 108px;
+  margin: 0 0 0 3px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Welcome (Figma: 36 / 48, SemiBold, x 227, y 104) */
+.trdt__welcome {
+  margin: 4px 0 0 33px;
+  font-size: clamp(26px, 2.815vw, 36px);
+  font-weight: 600;
+  line-height: 48px;
+}
+
+.trdt__welcome-name {
+  color: var(--trdt-blue-soft);
+}
+
+/* ---- Card (Figma: x 194, y 168, 1042 × 565, radius 18) ------------------- */
+
+.trdt__card {
+  margin-top: 16px;
+  padding: 22px 31px 32px 35px;
+  border: 1px solid var(--trdt-border);
+  border-radius: 18px;
+  background: var(--trdt-panel);
+}
+
+.trdt__card-title {
+  font-family: var(--trdt-display);
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 25px;
+}
+
+.trdt__rule {
+  height: 2px;
+  background: var(--trdt-rule);
+}
+
+.trdt__body {
+  display: grid;
+  grid-template-columns: minmax(0, 401px) minmax(0, 1fr);
+  column-gap: 34px;
+  align-items: start;
+  margin-top: 42px;
+  padding-left: 9px;
+}
+
+/* Photo (Figma: 401 × 440, radius 25, grey while empty) */
+.trdt__photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 401 / 440;
+  border-radius: 25px;
+  background: var(--trdt-avatar);
+  overflow: hidden;
+}
+
+.trdt__photo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.trdt__info {
+  min-width: 0;
+  max-width: 493px;
+}
+
+/* Figma: name 40px, box 84px tall, 32px below the photo's top edge */
+.trdt__name {
+  min-height: 84px;
+  margin-top: 32px;
+  color: #fff;
+  font-family: var(--trdt-display);
+  font-size: clamp(28px, 3.128vw, 40px);
+  font-weight: 400;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+/* Figma: Goudy 25px, 34px between lines, box 226px tall */
+.trdt__facts {
+  min-height: 226px;
+  max-width: 470px;
+  font-family: var(--trdt-body);
+  font-size: clamp(18px, 1.955vw, 25px);
+  line-height: 1.36;
+}
+
+.trdt__fact {
+  display: block;
+}
+
+.trdt__fact dt,
+.trdt__fact dd {
+  display: inline;
+  margin: 0;
+}
+
+/* The empty line Figma leaves before the message */
+.trdt__fact--message {
+  margin-top: 1.36em;
+}
+
+.trdt__actions {
+  display: flex;
+  justify-content: center;
+  max-width: 470px;
+  margin-top: 19px;
+}
+
+/* View Schedule (Figma: 184 × 58, radius 25, Google Sans Code Bold 20) */
+.trdt__button {
+  width: 184px;
+  height: 58px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 25px;
+  background: var(--trdt-blue);
+  color: #fff;
+  font-family: var(--trdt-mono);
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 200ms var(--trdt-ease),
+    transform 200ms var(--trdt-ease),
+    box-shadow 200ms var(--trdt-ease);
+}
+
+.trdt__button:hover {
+  background: var(--trdt-blue-hover);
+  box-shadow: 0 8px 22px rgba(59, 130, 246, 0.35);
+  transform: translateY(-2px);
+}
+
+.trdt__button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
+}
+
+/* ---- Laptop: tighten the side gutters ------------------------------------ */
+
+@media (max-width: 1100px) {
+  .trdt {
+    padding-right: 24px;
+  }
+
+  .trdt__body {
+    column-gap: 28px;
+  }
+}
+
+/* ---- Tablet / mobile: sidebar becomes a top bar, card stacks ------------- */
+
+@media (max-width: 900px) {
+  .trdt {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 16px;
+    align-content: start;
+    padding: 16px;
+  }
+
+  .trdt__side {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: 0;
+    padding: 10px 12px;
+    border-radius: 22px;
+    column-gap: 8px;
+  }
+
+  .trdt__brand {
+    height: 56px;
+    width: 150px;
+  }
+
+  .trdt__emblem {
+    left: 4px;
+    top: 14px;
+  }
+
+  .trdt__brand-name {
+    left: 36px;
+    top: 4px;
+    line-height: 40px;
+  }
+
+  .trdt__tagline {
+    left: 4px;
+    top: 38px;
+  }
+
+  .trdt__nav {
+    order: 3;
+    flex: 1 0 100%;
+    margin: 0 -12px;
+    padding: 0 12px 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .trdt__nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .trdt__nav-list {
+    display: flex;
+    gap: 4px;
+    width: max-content;
+  }
+
+  .trdt__nav-link {
+    height: 40px;
+    padding: 0 12px 0 8px;
+    border-radius: 20px;
+  }
+
+  .trdt__nav-link.is-active {
+    background: rgba(59, 130, 246, 0.14);
+  }
+
+  .trdt__side-foot {
+    margin: 0 0 0 auto;
+    padding: 0;
+  }
+
+  .trdt__side-foot::before {
+    display: none;
+  }
+
+  .trdt__logout {
+    gap: 7px;
+    height: 40px;
+    padding: 0 12px 0 8px;
+    border-radius: 20px;
+  }
+
+  .trdt__main {
+    display: block;
+  }
+
+  .trdt__welcome {
+    margin-left: 4px;
+  }
+
+  .trdt__crumb {
+    margin-left: 4px;
+  }
+
+  .trdt__card {
+    padding: 20px 20px 24px;
+  }
+
+  .trdt__body {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 24px;
+    margin-top: 28px;
+    padding-left: 0;
+  }
+
+  .trdt__photo {
+    max-width: 401px;
+    margin-inline: auto;
+  }
+
+  .trdt__info {
+    max-width: none;
+  }
+
+  .trdt__name {
+    min-height: 0;
+    margin-top: 0;
+    font-size: clamp(28px, 6vw, 36px);
+  }
+
+  .trdt__facts {
+    min-height: 0;
+    margin-top: 14px;
+    font-size: clamp(18px, 3.4vw, 22px);
+  }
+
+  .trdt__actions {
+    margin-top: 24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .trdt__header {
+    height: auto;
+    min-height: 64px;
+  }
+
+  .trdt__user {
+    width: auto;
+    height: 64px;
+    padding: 0 18px 0 10px;
+  }
+
+  .trdt__user-divider {
+    height: 36px;
+    margin: 0 8px 0 8px;
+  }
+
+  .trdt__avatar {
+    width: 40px;
+    height: 36px;
+  }
+
+  .trdt__user-name {
+    max-width: 124px;
+  }
+
+  .trdt__crumb {
+    margin-top: 0;
+    align-self: center;
+  }
+
+  .trdt__welcome {
+    margin-top: 12px;
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .trdt__button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .trdt__user-name {
+    display: none;
+  }
+
+  .trdt__user {
+    padding-right: 12px;
+  }
+}
+
+/* ---- Reduced motion ------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .trdt-reveal,
+  .trdt__bg {
+    animation: none;
+  }
+
+  .trdt__nav-link,
+  .trdt__nav-icon,
+  .trdt__bell,
+  .trdt__button {
+    transition: none;
+  }
+
+  .trdt__nav-link:hover .trdt__nav-icon,
+  .trdt__bell:hover,
+  .trdt__button:hover {
+    transform: none;
+  }
+}
