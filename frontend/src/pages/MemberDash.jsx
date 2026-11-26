@@ -24,8 +24,8 @@ const NAV_ITEMS = [
     { label: "Dashboard", icon: Icon.Home, href: "/member/dashboard", active: true },
     { label: "Membership", icon: Icon.Sparkle, href: "/member/membership" },
     { label: "Trainer", icon: Icon.UserCircle, href: "/member/trainer" },
-    { label: "Workout Plan", icon: Icon.Dumbbell, href: "/member/plan" },
-    { label: "Workout Log", icon: Icon.Clipboard, href: "/member/log" },
+    { label: "Workout Plan", icon: Icon.Dumbbell, href: "/member/workout-plan" },
+    { label: "Workout Log", icon: Icon.Clipboard, href: "/member/workout-log" },
     { label: "Progress", icon: Icon.TrendUp, href: "/member/progress" },
     { label: "Profile", icon: Icon.Gear, href: "/member/profile" },
 ]
