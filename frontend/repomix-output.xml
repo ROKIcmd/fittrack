@@ -45,9 +45,11 @@ public/
     gym-bg.jpeg
     gym-bg.png
     hero-image.jpg
+    README-trainer-dashboard.txt
     README-trainer-details.txt
     README.txt
     trainer-bg.png
+    trainer-pages.zip
     trainer-photo.png
   favicon.svg
   icons.svg
@@ -80,13 +82,27 @@ src/
     TextField/
       TextField.css
       TextField.jsx
+    trainer/
+      AnimatedLineChart.jsx
+      ConfirmDialog.jsx
+      PlanEditorFrame.jsx
+      PlanLibrary.jsx
+      SessionDetailPanel.jsx
+      SessionListItem.jsx
+      SessionStatusBadge.jsx
+      TrainerLayout.jsx
+      TrainerUI.jsx
+      WeekStrip.jsx
+    AuthButton (1).jsx
     AuthButton.jsx
+    AuthContext.jsx
     Button.jsx
     CountUp.jsx
     DietPlan.jsx
     Features.js
     FeaturStrip.jsx
     Hero.jsx
+    LinkButton.jsx
     LogDetails.jsx
     LogListItem.jsx
     Logo.jsx
@@ -100,11 +116,13 @@ src/
     PlanCalendar.jsx
     PlanDetails.jsx
     ProgressChart.jsx
+    RequireAuth.jsx
     RescheduleForm.jsx
     SampleQr.jsx
     SectionCard.jsx
     Sidebar.jsx
     StatusBadge.jsx
+    TrainerShell.jsx
   context/
     AuthContext.jsx
     MembershipContext.jsx
@@ -114,10 +132,14 @@ src/
     profile.js
     progress.js
     tierStyles.js
+    trainerDashboard.js
+    trainerSchedule.js
+    trainerStore.js
     workoutLogs.js
     workoutPlans.js
   hooks/
     useDashboard.js
+    useTrainerSchedule.js
   pages/
     Member/
       MembershipPage.jsx
@@ -135,6 +157,13 @@ src/
     RegistrationDetails/
       RegistrationDetails.css
       RegistrationDetails.jsx
+    Trainer/
+      TrainerBodyMetrics.jsx
+      TrainerDashboard.jsx
+      TrainerDietPlans.jsx
+      TrainerRescheduling.jsx
+      TrainerSchedulePage.jsx
+      TrainerWorkoutPlans.jsx
     TrainerDetails/
       TrainerDetails.css
       TrainerDetails.jsx
@@ -148,10 +177,12 @@ src/
     dashboardService.js
     registration.js
     registrationDetails.js
+    trainerScheduleService.js
   Styles/
     Animations.jsx
     global.css
   utils/
+    scheduleDates.js
     validators.js
   App.css
   App.jsx
@@ -167,6 +198,20 @@ vite.config.js
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="public/assets/README-trainer-dashboard.txt">
+Trainer Dashboard: images to put in frontend/public/assets/
+(the sandbox it was built in could not download from figma.com)
+
+  trainer-gym-header.png  Figma node 94:18 "Gym header" -> export the ORIGINAL image.
+                          Photo strip behind the top of the page (the page darkens it).
+  trainer-avatar.png      Figma node 94:47 "John Smith portrait" -> export the image.
+                          Sample trainer portrait. Replace with the real trainer photo.
+
+fittrack-emblem.svg (logo mark in the sidebar) is the same file the Sign Up page
+uses. If an image is missing the page still works: dark background, grey avatar
+circle, no logo mark.
+</file>
 
 <file path="public/assets/README-trainer-details.txt">
 Trainer Details page: images to put in this folder
@@ -184,7 +229,7 @@ grey box for the photo, plain dark background, no logo mark.
 </file>
 
 <file path="public/assets/README.txt">
-Put these files from Figma in this folder (the sandbox this was built in
+dPut these files from Figma in this folder (the sandbox this was built in
 could not download from figma.com):
 
   gym-bg.png            Figma node 13:43 "image 3" -> export the ORIGINAL image.
@@ -1736,16 +1781,1076 @@ const TextField = forwardRef(function TextField(
 export default TextField;
 </file>
 
-<file path="src/components/AuthButton.jsx">
-import Button from "./Button";
+<file path="src/components/trainer/AnimatedLineChart.jsx">
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+
+// Reusable animated line + area chart (hand-built SVG, no chart library).
+//
+// points: [{ x: number, y: number, label?: string }]   (sorted by x)
+// xTicks: [{ x, label }]    yLabel: axis title    unit: tooltip unit
+//
+// Animation (all CSS, only when the user has NOT asked for reduced motion):
+//   gridlines fade in, the line draws left to right, the area fades up, dots pop
+//   in one after another, the last-point pulse loops softly. Hovering or
+//   focusing moves the tooltip with a short transition.
+
+const PAD = { top: 22, right: 22, bottom: 26, left: 38 };
+const HEIGHT = 168;
+
+const smooth = (pts) =>
+  pts.reduce((d, p, i) => {
+    if (i === 0) return `M${p.px},${p.py}`;
+    const prev = pts[i - 1];
+    const cx = (prev.px + p.px) / 2;
+    return `${d} C${cx},${prev.py} ${cx},${p.py} ${p.px},${p.py}`;
+  }, "");
+
+export default function AnimatedLineChart({ points, xTicks, yLabel, unit = "", ariaLabel, replayKey }) {
+  const uid = useId().replace(/:/g, "");
+  const box = useRef(null);
+  const [width, setWidth] = useState(0);
+  const [active, setActive] = useState(null);
+
+  useEffect(() => {
+    if (!box.current) return undefined;
+    const ro = new ResizeObserver(([entry]) => setWidth(Math.round(entry.contentRect.width)));
+    ro.observe(box.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const geo = useMemo(() => {
+    if (!points.length || width < 80) return null;
+    const ys = points.map((p) => p.y);
+    const lo = Math.floor(Math.min(...ys) - 0.5);
+    const hi = Math.ceil(Math.max(...ys) + 0.5);
+    const yMin = lo % 2 ? lo - 1 : lo;
+    const yMax = hi % 2 ? hi + 1 : hi;
+    const xMin = Math.min(...points.map((p) => p.x), ...(xTicks || []).map((t) => t.x));
+    const xMax = Math.max(...points.map((p) => p.x), ...(xTicks || []).map((t) => t.x));
+    const sx = (x) => PAD.left + ((x - xMin) / (xMax - xMin || 1)) * (width - PAD.left - PAD.right);
+    const sy = (y) => PAD.top + (1 - (y - yMin) / (yMax - yMin || 1)) * (HEIGHT - PAD.top - PAD.bottom);
+    const pts = points.map((p) => ({ ...p, px: sx(p.x), py: sy(p.y) }));
+    const ticks = [];
+    for (let v = yMin; v <= yMax; v += 2) ticks.push({ v, py: sy(v) });
+    const line = smooth(pts);
+    const base = HEIGHT - PAD.bottom;
+    const area = `${line} L${pts[pts.length - 1].px},${base} L${pts[0].px},${base} Z`;
+    return { pts, ticks, line, area, base, sx };
+  }, [points, width, xTicks]);
+
+  const shown = geo && geo.pts[active ?? geo.pts.length - 1];
+  const tipLeft = shown ? Math.min(Math.max(shown.px - 28, 4), width - 60) : 0;
+
+  return (
+    <div ref={box} className="relative w-full select-none" style={{ height: HEIGHT }}>
+      {/* Keyframes live here so the component is copy-paste friendly. */}
+      <style>{`
+        @media (prefers-reduced-motion: no-preference) {
+          .ftc-${uid} .ftc-grid { animation: ftc-fade .6s ease-out both; }
+          .ftc-${uid} .ftc-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: ftc-draw 1.4s cubic-bezier(.4,0,.2,1) .15s forwards; }
+          .ftc-${uid} .ftc-area { animation: ftc-fade 1s ease-out .9s both; }
+          .ftc-${uid} .ftc-dot { transform-box: fill-box; transform-origin: center; animation: ftc-pop .35s cubic-bezier(.34,1.56,.64,1) both; }
+          .ftc-${uid} .ftc-pulse { transform-box: fill-box; transform-origin: center; animation: ftc-pulse 2.2s ease-out 1.9s infinite; }
+          .ftc-${uid} .ftc-tip { animation: ftc-fade .5s ease-out 1.5s both; }
+        }
+        @media (prefers-reduced-motion: reduce) { .ftc-${uid} .ftc-line { stroke-dasharray: none; } }
+        .ftc-${uid} .ftc-tip { transition: left .25s ease, top .25s ease; }
+        @keyframes ftc-draw { to { stroke-dashoffset: 0; } }
+        @keyframes ftc-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes ftc-pop { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+        @keyframes ftc-pulse { 0% { opacity: .55; transform: scale(1); } 100% { opacity: 0; transform: scale(3.2); } }
+      `}</style>
+
+      {geo && (
+        <div className={`ftc-${uid} absolute inset-0`} key={replayKey}>
+          <svg width={width} height={HEIGHT} role="img" aria-label={ariaLabel} className="block overflow-visible">
+            <defs>
+              <linearGradient id={`${uid}-fill`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#3b82f6" stopOpacity="0.55" />
+                <stop offset="1" stopColor="#3b82f6" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            {geo.ticks.map((t) => (
+              <g key={t.v} className="ftc-grid">
+                <line x1={PAD.left} x2={width - PAD.right} y1={t.py} y2={t.py} stroke="#ffffff" strokeOpacity="0.07" />
+                <text x={PAD.left - 8} y={t.py + 3} textAnchor="end" fontSize="8" fill="#afbdcf">{t.v}</text>
+              </g>
+            ))}
+            {(xTicks || []).map((t) => (
+              <text key={t.label} x={geo.sx(t.x)} y={HEIGHT - 6} textAnchor="middle" fontSize="7" fill="#afbdcf">{t.label}</text>
+            ))}
+            {yLabel && (
+              <text transform={`translate(10 ${(PAD.top + geo.base) / 2}) rotate(-90)`} textAnchor="middle" fontSize="7" fill="#afbdcf">{yLabel}</text>
+            )}
+
+            <path className="ftc-area" d={geo.area} fill={`url(#${uid}-fill)`} />
+            <path
+              className="ftc-line"
+              d={geo.line}
+              pathLength="1"
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="2"
+              strokeLinecap="round"
+              style={{ filter: "drop-shadow(0 0 5px rgba(59,130,246,.8))" }}
+            />
+
+            {active !== null && (
+              <line x1={shown.px} x2={shown.px} y1={PAD.top} y2={geo.base} stroke="#3b82f6" strokeOpacity="0.4" strokeDasharray="3 3" />
+            )}
+
+            {geo.pts.map((p, i) => {
+              const last = i === geo.pts.length - 1;
+              return (
+                <g key={`${p.x}-${i}`}>
+                  {last && <circle className="ftc-pulse" cx={p.px} cy={p.py} r="4" fill="#3b82f6" />}
+                  <circle
+                    className="ftc-dot"
+                    cx={p.px}
+                    cy={p.py}
+                    r={last || i === active ? 4 : 2.2}
+                    fill={last || i === active ? "#ffffff" : "#8cbaff"}
+                    stroke={last || i === active ? "#3b82f6" : "none"}
+                    strokeWidth="2"
+                    style={{ animationDelay: `${1 + i * 0.07}s` }}
+                  />
+                  {/* big invisible target so hover and keyboard focus are easy */}
+                  <circle
+                    cx={p.px}
+                    cy={p.py}
+                    r="11"
+                    fill="transparent"
+                    tabIndex={0}
+                    role="img"
+                    aria-label={`${p.label || p.x}: ${p.y}${unit}`}
+                    onMouseEnter={() => setActive(i)}
+                    onMouseLeave={() => setActive(null)}
+                    onFocus={() => setActive(i)}
+                    onBlur={() => setActive(null)}
+                    style={{ outline: "none" }}
+                  />
+                </g>
+              );
+            })}
+          </svg>
+
+          <div
+            className="ftc-tip pointer-events-none absolute rounded-lg border border-[#3b82f6]/60 bg-[#0b1626] px-2 py-1 text-center shadow-[0_0_14px_rgba(59,130,246,0.35)]"
+            style={{ left: tipLeft, top: Math.max(shown.py - 44, 0), width: 56 }}
+          >
+            <p className="text-[10px] font-semibold leading-[13px] text-[#f8fafc]">{shown.y} {unit}</p>
+            <p className="text-[8px] leading-[11px] text-[#afbdcf]">{shown.label}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="src/components/trainer/ConfirmDialog.jsx">
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { PillButton } from "../MemberDashComp";
+
+const TONES = {
+    danger: "!bg-[#b8465a] !text-white hover:!bg-[#c9526a]",
+    primary: "",
+};
+
+/**
+ * Generic modal confirmation.
+ * - Escape or backdrop click cancels (disabled while `busy`).
+ * - Focus moves to the safe (cancel) button on open and returns to the opener on close.
+ * - Tab is trapped between the two buttons.
+ */
+export default function ConfirmDialog({
+                                          open,
+                                          title,
+                                          subtitle,
+                                          children,
+                                          confirmLabel = "Confirm",
+                                          cancelLabel = "Cancel",
+                                          tone = "primary",
+                                          busy = false,
+                                          onConfirm,
+                                          onCancel,
+                                      }) {
+    const cancelRef = useRef(null);
+    const confirmRef = useRef(null);
+    const openerRef = useRef(null);
+
+    useEffect(() => {
+        if (!open) return;
+        openerRef.current = document.activeElement;
+        cancelRef.current?.focus();
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        const onKeyDown = (e) => {
+            if (e.key === "Escape" && !busy) {
+                e.preventDefault();
+                onCancel();
+            }
+            if (e.key === "Tab") {
+                const first = cancelRef.current;
+                const last = confirmRef.current;
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last?.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first?.focus();
+                }
+            }
+        };
+        document.addEventListener("keydown", onKeyDown);
+
+        return () => {
+            document.removeEventListener("keydown", onKeyDown);
+            document.body.style.overflow = previousOverflow;
+            openerRef.current?.focus?.();
+        };
+    }, [open, busy, onCancel]);
+
+    if (!open) return null;
+
+    return createPortal(
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
+            onMouseDown={(e) => {
+                if (e.target === e.currentTarget && !busy) onCancel();
+            }}
+        >
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="confirm-dialog-title"
+                className="w-full max-w-md rounded-2xl bg-[#17243a] p-6 shadow-2xl ring-1 ring-white/10"
+            >
+                <h2 id="confirm-dialog-title" className="font-ui text-xl font-bold text-white">
+                    {title}
+                </h2>
+                {subtitle && <p className="mt-3 font-body text-xs text-slate-300">{subtitle}</p>}
+
+                <hr className="my-4 border-white/10" />
+
+                <div className="font-body text-sm text-slate-200">{children}</div>
+
+                <div className="mt-7 grid grid-cols-2 gap-3">
+                    <PillButton
+                        ref={cancelRef}
+                        disabled={busy}
+                        onClick={onCancel}
+                        className="w-full justify-center !bg-[#2a3a52] !text-white hover:!bg-[#33465f]"
+                    >
+                        {cancelLabel}
+                    </PillButton>
+                    <PillButton
+                        ref={confirmRef}
+                        disabled={busy}
+                        onClick={onConfirm}
+                        className={`w-full justify-center ${TONES[tone] ?? ""}`}
+                    >
+                        {busy ? "Saving…" : confirmLabel}
+                    </PillButton>
+                </div>
+            </div>
+        </div>,
+        document.body,
+    );
+}
+</file>
+
+<file path="src/components/trainer/PlanEditorFrame.jsx">
+import { Button, Card, Divider, Notice } from "./TrainerUI";
+import { formatLong } from "../../data/trainerStore";
+
+// Right-hand editor card shared by Workout plans and Diet plans:
+// heading + DRAFT tag + Save draft, then your form (children), then the
+// "Starts <date>" footer with the assign button.
+
+export default function PlanEditorFrame({
+  title,
+  statusLabel,
+  onSaveDraft,
+  startDate,
+  onStartDate,
+  assignLabel,
+  onAssign,
+  message,
+  children,
+}) {
+  return (
+    <Card className="flex flex-col px-6 pb-6 pt-[18px] lg:h-[703px]" delay={140}>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-[19px] font-semibold leading-7">{title}</h2>
+        <div className="flex items-center gap-[97px] max-sm:gap-3">
+          <span
+            className={`text-[10px] font-semibold leading-[15px] transition-colors ${
+              statusLabel === "ASSIGNED" ? "text-[#8ce3b1]" : "text-[#f8cf7d]"
+            }`}
+          >
+            {statusLabel}
+          </span>
+          <Button className="w-[125px]" onClick={onSaveDraft}>
+            Save draft
+          </Button>
+        </div>
+      </div>
+      <Divider className="mt-[15px]" />
+
+      <div className="min-h-0 flex-1 pt-4">{children}</div>
+
+      {message && <Notice tone={message.tone} className="mb-3">{message.text}</Notice>}
+      <Divider />
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-[19px]">
+        <label className="relative text-[11px] leading-4 text-[#afbdcf]">
+          Starts <span className="underline decoration-dotted underline-offset-2">{formatLong(startDate)}</span>
+          <input
+            type="date"
+            aria-label="Start date"
+            value={startDate}
+            onChange={(event) => event.target.value && onStartDate(event.target.value)}
+            className="absolute inset-0 size-full cursor-pointer opacity-0"
+          />
+        </label>
+        <Button variant="primary" className="w-[191px]" onClick={onAssign}>
+          {assignLabel}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+</file>
+
+<file path="src/components/trainer/PlanLibrary.jsx">
+import { useMemo, useState } from "react";
+import { Card, Divider, SearchInput, UploadBox, cx } from "./TrainerUI";
+
+// Left-hand panel shared by Workout plans and Diet plans:
+// title + counts, upload box, searchable saved plans, footer hint.
+//
+// plans: [{ id, name, subtitle, tone? ("warn" colours the subtitle) }]
+
+export default function PlanLibrary({
+  title,
+  summary,
+  plans,
+  selectedId,
+  onSelect,
+  fileName,
+  onFile,
+  footer,
+}) {
+  const [query, setQuery] = useState("");
+
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return needle ? plans.filter((p) => `${p.name} ${p.subtitle}`.toLowerCase().includes(needle)) : plans;
+  }, [plans, query]);
+
+  return (
+    <Card className="flex flex-col px-5 pb-5 pt-[19px] lg:h-[703px]" delay={80}>
+      <h2 className="text-lg font-semibold leading-[26px]">{title}</h2>
+      <p className="text-[11px] leading-4 text-[#afbdcf]">{summary}</p>
+
+      <div className="mt-[18px]">
+        <UploadBox fileName={fileName} onFile={onFile} />
+      </div>
+
+      <p className="mt-[23px] text-[10px] font-semibold leading-[15px] text-[#afbdcf]">SAVED PLANS</p>
+      <SearchInput value={query} onChange={setQuery} placeholder="Search plans…" label="Search saved plans" className="mt-[9px]" />
+
+      <ul className="mt-4 flex min-h-0 flex-1 flex-col gap-[11px] overflow-y-auto pr-px">
+        {visible.map((plan, index) => (
+          <li key={plan.id} className="animate-fade-up" style={{ animationDelay: `${index * 60}ms` }}>
+            <button
+              type="button"
+              onClick={() => onSelect(plan.id)}
+              aria-pressed={plan.id === selectedId}
+              className={cx(
+                "flex h-14 w-full flex-col items-start justify-center rounded-[10px] px-3 text-left transition duration-200",
+                "hover:translate-x-[2px] focus-visible:ring-2 focus-visible:ring-[#3b82f6]/70 focus-visible:outline-none",
+                plan.id === selectedId ? "bg-[#263d5c]" : "bg-[#17212f] hover:bg-[#1b2a3c]",
+              )}
+            >
+              <span className="text-xs font-medium leading-[17px] text-[#f8fafc]">{plan.name}</span>
+              <span className={cx("mt-[5px] text-[10px] leading-[15px]", plan.tone === "warn" ? "text-[#f8cf7d]" : "text-[#afbdcf]")}>
+                {plan.subtitle}
+              </span>
+            </button>
+          </li>
+        ))}
+        {visible.length === 0 && <li className="text-[11px] text-[#afbdcf]">No saved plans match “{query}”.</li>}
+      </ul>
+
+      <Divider className="mt-4" />
+      <div className="pt-[18px] text-[11px] leading-4 text-[#afbdcf]">{footer}</div>
+    </Card>
+  );
+}
+</file>
+
+<file path="src/components/trainer/SessionDetailPanel.jsx">
+import { useState } from "react";
+import { Card, PillButton } from "../MemberDashComp";
+import { Animate } from "../../Styles/Animations";
+import { formatLongDate, formatMediumDate, formatTimeRange, formatTimeSpan } from "../../utils/scheduleDates";
+import SessionStatusBadge from "./SessionStatusBadge";
+import ConfirmDialog from "./ConfirmDialog";
+
+const DANGER = "!bg-[#4a2630] !text-rose-100 hover:!bg-[#5b2b38]";
+
+/**
+ * Right-hand "Selected session" panel.
+ * Actions are callbacks so the page decides what they do (service calls, navigation).
+ * Marking a no-show asks for confirmation first.
+ */
+export default function SessionDetailPanel({ session, busy = false, onStart, onComplete, onNoShow, onViewProgress }) {
+    const [confirmingNoShow, setConfirmingNoShow] = useState(false);
+
+    if (!session) {
+        return (
+            <Card hover={false} className="flex h-full min-h-[320px] flex-col justify-center text-center">
+                <p className="font-ui text-[11px] uppercase tracking-widest text-slate-500">Selected session</p>
+                <p className="mt-3 font-body text-sm text-slate-400">Select a session to see its details.</p>
+            </Card>
+        );
+    }
+
+    const { status } = session;
+    const isDue = status === "SCHEDULED";
+    const isRunning = status === "STARTED";
+    const isClosed = status === "COMPLETED" || status === "NO_SHOW";
+    const firstName = session.memberName.split(" ")[0];
+
+    const confirmNoShow = async () => {
+        await onNoShow(session.id); // hook resolves after the update (or error) is handled
+        setConfirmingNoShow(false);
+    };
+
+    return (
+        <Animate type="up" delay={200} className="h-full">
+            <Card hover={false} className="flex h-full flex-col gap-5 p-5">
+                <p className="font-ui text-[11px] uppercase tracking-widest text-slate-500">Selected session</p>
+
+                <div>
+                    <h2 className="font-ui text-xl font-bold text-white">{session.memberName}</h2>
+                    <p className="mt-1.5 font-body text-sm text-slate-400">
+                        {session.title} · {session.focus}
+                    </p>
+                    <SessionStatusBadge status={status} className="mt-4" />
+                </div>
+
+                <div className="rounded-xl bg-[#141f30] px-4 py-4">
+                    <p className="font-ui text-sm font-bold text-white">{formatLongDate(session.date)}</p>
+                    <p className="mt-2 font-body text-xs text-slate-400">{formatTimeRange(session.startTime, session.durationMinutes)}</p>
+                </div>
+
+                <hr className="border-white/10" />
+
+                <div className="flex flex-col gap-3">
+                    {isRunning ? (
+                        <PillButton disabled={busy} onClick={() => onComplete(session.id)} className="w-full justify-center">
+                            Complete session
+                        </PillButton>
+                    ) : (
+                        <PillButton disabled={busy || !isDue} onClick={() => onStart(session.id)} className="w-full justify-center">
+                            Start session
+                        </PillButton>
+                    )}
+                    <PillButton
+                        disabled={busy || !isDue}
+                        onClick={() => setConfirmingNoShow(true)}
+                        className={`w-full justify-center ${DANGER}`}
+                    >
+                        Mark client as no-show
+                    </PillButton>
+                    <p className="font-body text-[11px] text-slate-500">
+                        {isClosed ? "This session is closed." : "Record only when the session is due."}
+                    </p>
+                </div>
+
+                <div className="mt-auto flex flex-col gap-3">
+                    <p className="font-body text-[11px] text-slate-500">The same status appears in member progress.</p>
+                    <PillButton onClick={() => onViewProgress(session)} className="w-full justify-center !bg-[#22324a] !text-white">
+                        View member progress →
+                    </PillButton>
+                </div>
+            </Card>
+
+            <ConfirmDialog
+                open={confirmingNoShow}
+                title={`Mark ${firstName} as a no-show?`}
+                subtitle={`${formatMediumDate(session.date)} · ${formatTimeSpan(session.startTime, session.durationMinutes)}`}
+                cancelLabel="Keep scheduled"
+                confirmLabel="Confirm no-show"
+                tone="danger"
+                busy={busy}
+                onConfirm={confirmNoShow}
+                onCancel={() => setConfirmingNoShow(false)}
+            >
+                <p>
+                    This will record a no-show for this session and show the same status in {firstName}'s progress tab.
+                </p>
+                <p className="mt-5 text-xs text-slate-400">
+                    Only confirm after the client has not arrived.
+                    <br />
+                    You can correct attendance from the schedule.
+                </p>
+            </ConfirmDialog>
+        </Animate>
+    );
+}
+</file>
+
+<file path="src/components/trainer/SessionListItem.jsx">
+import { Animate } from "../../Styles/Animations";
+import { endTime, formatTime } from "../../utils/scheduleDates";
+import SessionStatusBadge from "./SessionStatusBadge";
+
+/** One row in the day's session list. Mirrors member WorkoutLogItem, but selectable. */
+export default function SessionListItem({ session, selected, onSelect, delay = 0 }) {
+    const { memberName, title, durationMinutes, startTime, status, note } = session;
+    return (
+        <Animate type="up" delay={delay}>
+            <button
+                type="button"
+                onClick={() => onSelect(session.id)}
+                aria-pressed={selected}
+                className={`flex w-full items-center gap-4 rounded-xl border px-4 py-4 text-left transition-colors focus-visible:outline-2 focus-visible:outline-sky-400 ${
+                    selected ? "border-sky-500/70 bg-[#233f6b]" : "border-transparent bg-[#141f30] hover:bg-[#182539]"
+                }`}
+            >
+                <div className="w-20 shrink-0 border-r border-white/10 pr-4 font-ui text-xs">
+                    <p className="font-bold text-white">{formatTime(startTime)}</p>
+                    <p className="mt-1.5 text-slate-500">{formatTime(endTime(startTime, durationMinutes))}</p>
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <p className="truncate font-ui text-sm font-bold text-white">{memberName}</p>
+                    <p className="mt-1.5 truncate font-body text-xs text-slate-400">
+                        {title} · {durationMinutes} min
+                    </p>
+                    {note && <p className="mt-1 truncate font-body text-[11px] text-amber-300/80">{note}</p>}
+                </div>
+
+                <SessionStatusBadge status={status} className="shrink-0" />
+            </button>
+        </Animate>
+    );
+}
+</file>
+
+<file path="src/components/trainer/SessionStatusBadge.jsx">
+import { StatusBadge } from "../MemberDashComp";
+
+// Single place that maps backend session statuses to a label and to a status key the shared
+// member StatusBadge understands. If the shared badge doesn't style one of these keys yet,
+// add it to StatusBadge in MemberDashComp.jsx; nothing here needs to change.
+const STATUS_MAP = {
+    COMPLETED: { label: "Completed", badge: "completed" },
+    STARTED: { label: "In progress", badge: "started" },
+    SCHEDULED: { label: "Scheduled", badge: "scheduled" },
+    UPCOMING: { label: "Upcoming", badge: "upcoming" },
+    NO_SHOW: { label: "No-show", badge: "missed" },
+};
+
+export const statusLabel = (status) => STATUS_MAP[status]?.label ?? status;
+
+export default function SessionStatusBadge({ status, className = "" }) {
+    const entry = STATUS_MAP[status] ?? { label: status, badge: "scheduled" };
+    return (
+        <StatusBadge status={entry.badge} className={className}>
+            {entry.label}
+        </StatusBadge>
+    );
+}
+</file>
+
+<file path="src/components/trainer/TrainerLayout.jsx">
+import { CalendarClock, CalendarDays, Dumbbell, House, LogOut, TrendingUp, Utensils } from "lucide-react";
+import { Logo, ProfilePill, SidebarNavItem } from "../MemberDashComp";
+
+export const TRAINER_NAV = [
+    { key: "dashboard", label: "Dashboard", href: "/trainer", icon: House },
+    { key: "workout-plans", label: "Workout plans", href: "/trainer/workout-plans", icon: Dumbbell },
+    { key: "diet-plans", label: "Diet plans", href: "/trainer/diet-plans", icon: Utensils },
+    { key: "rescheduling", label: "Rescheduling", href: "/trainer/rescheduling", icon: CalendarClock },
+    { key: "body-metrics", label: "Body Metrics", href: "/trainer/body-metrics", icon: TrendingUp },
+];
+const SCHEDULE_NAV = { key: "schedule", label: "My schedule", href: "/trainer/schedule", icon: CalendarDays };
+
+/**
+ * Shell for every trainer page: sidebar, hero header (breadcrumb, title, profile pill), content.
+ * Counterpart of MemberLayout. Reuses the member sidebar pieces (Logo, SidebarNavItem, ProfilePill).
+ */
+export default function TrainerLayout({
+                                          activeKey,
+                                          pageTitle,
+                                          subtitle,
+                                          trainer,
+                                          onLogout,
+                                          backgroundSrc = "/assets/trainer-bg.png",
+                                          children,
+                                      }) {
+    const renderItem = (item, i) => (
+        <SidebarNavItem key={item.key} icon={item.icon} label={item.label} href={item.href} active={item.key === activeKey} delay={i * 50} />
+    );
+
+    return (
+        <div className="min-h-screen bg-[#050a12] p-3 text-white sm:p-4">
+            <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[1440px] gap-4 overflow-hidden rounded-3xl border border-white/5 bg-[#0b1320] p-4">
+                <aside className="hidden w-56 shrink-0 flex-col rounded-2xl bg-[#17243a] p-5 lg:flex">
+                    <Logo />
+                    <p className="mt-3 font-ui text-[9px] uppercase tracking-widest text-slate-400">Trainer workspace</p>
+
+                    <nav aria-label="Trainer navigation" className="mt-8 flex flex-col gap-1">
+                        {TRAINER_NAV.map(renderItem)}
+                        <div className="mt-6">{renderItem(SCHEDULE_NAV, TRAINER_NAV.length)}</div>
+                    </nav>
+
+                    <div className="mt-auto">
+                        <p className="font-ui text-[9px] uppercase tracking-widest text-slate-500">Coach workspace</p>
+                        <p className="mt-2 font-ui text-sm font-bold">{trainer?.fullName}</p>
+                        <p className="font-body text-xs text-slate-400">{trainer?.title}</p>
+                        <button
+                            type="button"
+                            onClick={onLogout}
+                            className="mt-5 flex w-full items-center gap-3 border-t border-white/10 pt-5 font-ui text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-sky-400"
+                        >
+                            <LogOut size={18} aria-hidden="true" /> Log out
+                        </button>
+                    </div>
+                </aside>
+
+                <main className="relative min-w-0 flex-1 overflow-hidden rounded-2xl">
+                    <div
+                        aria-hidden="true"
+                        className="absolute inset-x-0 top-0 h-64 bg-cover bg-center opacity-40"
+                        style={{ backgroundImage: `linear-gradient(to bottom, transparent, #0b1320), url(${backgroundSrc})` }}
+                    />
+                    <div className="relative flex flex-col gap-6 px-6 py-5">
+                        <header className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="font-ui text-[11px] text-slate-400">
+                                    Trainer workspace / <span className="text-slate-200">{pageTitle}</span>
+                                </p>
+                                <h1 className="mt-4 font-ui text-3xl font-bold">{pageTitle}</h1>
+                                {subtitle && <p className="mt-3 font-body text-xs text-slate-400">{subtitle}</p>}
+                            </div>
+                            <ProfilePill name={trainer?.fullName} avatarSrc={trainer?.avatarSrc} />
+                        </header>
+                        {children}
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
+}
+</file>
+
+<file path="src/components/trainer/TrainerUI.jsx">
+import { useEffect, useRef, useState } from "react";
+
+// Small building blocks shared by every trainer page (plans, rescheduling,
+// body metrics, dashboard). Styling is Tailwind only, nothing global.
+// Entrance animations use the animate-* classes from your index.css, which
+// already respect prefers-reduced-motion.
+
+export const cx = (...parts) => parts.filter(Boolean).join(" ");
+
+const FOCUS = "outline-none transition focus-visible:ring-2 focus-visible:ring-[#3b82f6]/70";
+
+export function Card({ as: Tag = "section", delay = 0, className = "", children, ...rest }) {
+  return (
+    <Tag
+      className={cx("animate-fade-up overflow-hidden rounded-[18px] bg-[#1f2937]", className)}
+      style={{ animationDelay: `${delay}ms` }}
+      {...rest}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+const PILL_TONES = {
+  success: "bg-[#183e32] text-[#8ce3b1]",
+  warn: "bg-[#453923] text-[#f8cf7d]",
+  info: "bg-[#284b7a] text-[#a8ceff]",
+  danger: "bg-[#4a2430] text-[#f4a3b5]",
+};
+
+export function Pill({ tone = "success", className = "", children }) {
+  return (
+    <span
+      className={cx(
+        "inline-flex h-6 min-w-[69px] items-center justify-center rounded-xl px-3 text-[10px] font-medium",
+        PILL_TONES[tone],
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+const BUTTONS = {
+  primary: "bg-[#3b82f6] text-[#f8fafc] hover:bg-[#5b9bf8] hover:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.7)]",
+  secondary: "bg-[#2c3a4d] text-[#f8fafc] hover:bg-[#364860]",
+  danger: "bg-[#2c3a4d] text-[#f4a3b5] hover:bg-[#4a2430]",
+};
+
+export function Button({ variant = "secondary", size = "md", as: Tag = "button", className = "", children, ...rest }) {
+  return (
+    <Tag
+      type={Tag === "button" ? "button" : undefined}
+      className={cx(
+        "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full font-semibold",
+        "transition duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50",
+        size === "md" ? "h-[34px] px-5 text-xs" : "h-9 px-5 text-[11px]",
+        FOCUS,
+        BUTTONS[variant],
+        className,
+      )}
+      {...rest}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+// "+ Add exercise" style text button
+export function TextButton({ className = "", ...rest }) {
+  return (
+    <button
+      type="button"
+      className={cx("rounded text-xs font-semibold text-[#8cbaff] transition hover:text-[#b3d1ff]", FOCUS, className)}
+      {...rest}
+    />
+  );
+}
+
+export function Divider({ className = "" }) {
+  return <hr className={cx("h-px border-0 bg-[#374658]", className)} />;
+}
+
+export function Label({ children, htmlFor, className = "" }) {
+  return (
+    <label htmlFor={htmlFor} className={cx("mb-[5px] block text-[10px] font-medium leading-[15px] text-[#afbdcf]", className)}>
+      {children}
+    </label>
+  );
+}
+
+const inputBase =
+  "w-full rounded-[8px] bg-[#17212f] px-3 text-xs text-[#f8fafc] placeholder:text-[#afbdcf] focus:ring-2 focus:ring-[#3b82f6]/70 hover:bg-[#1a2636]";
+
+export function TextInput({ className = "", invalid, ...rest }) {
+  return (
+    <input
+      className={cx(inputBase, "h-9 outline-none transition", invalid && "ring-2 ring-[#f4a3b5]/70", className)}
+      {...rest}
+    />
+  );
+}
+
+export function TextArea({ className = "", ...rest }) {
+  return <textarea className={cx(inputBase, "resize-none py-[9px] outline-none transition", className)} {...rest} />;
+}
+
+export function SearchInput({ value, onChange, placeholder, label, className = "" }) {
+  return (
+    <label className={cx("block", className)}>
+      <span className="sr-only">{label || placeholder}</span>
+      <input
+        type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="h-9 w-full rounded-[9px] bg-[#17212f] px-[13px] text-xs text-[#f8fafc] outline-none transition placeholder:text-[#afbdcf] hover:bg-[#1a2636] focus:ring-2 focus:ring-[#3b82f6]/70"
+      />
+    </label>
+  );
+}
+
+// Figma shows selects as "Value  ▾". A native <select> sits invisibly on top so
+// keyboard, mobile pickers and screen readers all work.
+export function SelectInput({ id, label, value, onChange, options, className = "", pill = false }) {
+  const items = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
+  const current = items.find((o) => o.value === value);
+  return (
+    <div
+      className={cx(
+        "relative flex items-center whitespace-pre text-xs transition focus-within:ring-2 focus-within:ring-[#3b82f6]/70",
+        pill
+          ? "h-[34px] justify-center rounded-[17px] bg-[#2c3a4d] font-semibold hover:bg-[#364860]"
+          : "h-9 rounded-[8px] bg-[#17212f] px-3 text-[#f8fafc] hover:bg-[#1a2636]",
+        className,
+      )}
+    >
+      <span aria-hidden="true" className={cx("truncate", !current && "text-[#afbdcf]")}>
+        {(current ? current.label : "Select…") + "  ▾"}
+      </span>
+      <select
+        id={id}
+        aria-label={label}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="absolute inset-0 size-full cursor-pointer opacity-0"
+      >
+        {!current && <option value="">Select…</option>}
+        {items.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// Inline status message that eases in (success / error / info)
+export function Notice({ tone = "success", children, className = "" }) {
+  if (!children) return null;
+  const tones = {
+    success: "bg-[#18352d] text-[#8ce3b1]",
+    error: "bg-[#4a2430] text-[#f4a3b5]",
+    info: "bg-[#20395a] text-[#a8ceff]",
+  };
+  return (
+    <p role="status" className={cx("animate-pop-in rounded-[10px] px-3 py-2 text-[11px] leading-4", tones[tone], className)}>
+      {children}
+    </p>
+  );
+}
+
+// Count-up number for stat cards. Skips the animation for reduced-motion users.
+export function CountUp({ value, decimals = 0, duration = 900 }) {
+  const [shown, setShown] = useState(value);
+  const first = useRef(true);
+
+  useEffect(() => {
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setShown(value);
+      return undefined;
+    }
+    const from = first.current ? 0 : shown;
+    first.current = false;
+    const started = performance.now();
+    let frame;
+    const tick = (now) => {
+      const t = Math.min(1, (now - started) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setShown(from + (value - from) * eased);
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, duration]);
+
+  return <>{Number(shown).toFixed(decimals)}</>;
+}
+
+// Drop zone + "Choose file" for plan uploads (PDF / DOCX up to 20 MB).
+// Nothing is uploaded anywhere: the file name is just attached to the draft.
+const MAX_BYTES = 20 * 1024 * 1024;
+const OK_EXT = /\.(pdf|docx)$/i;
+
+export function UploadBox({ fileName, onFile }) {
+  const input = useRef(null);
+  const [over, setOver] = useState(false);
+  const [error, setError] = useState("");
+
+  const accept = (file) => {
+    if (!file) return;
+    if (!OK_EXT.test(file.name)) return setError("Only PDF or DOCX files are supported.");
+    if (file.size > MAX_BYTES) return setError("That file is larger than 20 MB.");
+    setError("");
+    onFile(file.name);
+  };
+
+  return (
+    <div
+      onDragOver={(event) => {
+        event.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(event) => {
+        event.preventDefault();
+        setOver(false);
+        accept(event.dataTransfer.files?.[0]);
+      }}
+      className={cx(
+        "rounded-xl border border-dashed bg-[#17212f] px-[17px] pb-[22px] pt-[18px] transition duration-200",
+        over ? "scale-[1.015] border-[#3b82f6] bg-[#1a2b42]" : "border-[#52647c]",
+      )}
+    >
+      <p className="text-sm font-semibold leading-5">Upload an existing plan</p>
+      <p className="mt-[9px] text-[11px] leading-4 text-[#afbdcf]">Drop a document here or browse</p>
+      <p className="mt-1 text-[10px] leading-[15px] text-[#afbdcf]">PDF, DOCX · up to 20 MB</p>
+      <input
+        ref={input}
+        type="file"
+        accept=".pdf,.docx"
+        className="sr-only"
+        tabIndex={-1}
+        onChange={(event) => {
+          accept(event.target.files?.[0]);
+          event.target.value = "";
+        }}
+      />
+      <Button className="mt-[26px] w-full" onClick={() => input.current?.click()}>
+        Choose file
+      </Button>
+      {fileName && !error && (
+        <p className="animate-pop-in mt-2 truncate text-[10px] leading-[15px] text-[#8ce3b1]" title={fileName}>
+          Attached: {fileName}
+        </p>
+      )}
+      {error && <p className="animate-pop-in mt-2 text-[10px] leading-[15px] text-[#f4a3b5]">{error}</p>}
+    </div>
+  );
+}
+</file>
+
+<file path="src/components/trainer/WeekStrip.jsx">
+import { Card } from "../MemberDashComp";
+import { Animate } from "../../Styles/Animations";
+import { fromIso, weekdayShort } from "../../utils/scheduleDates";
+
+/** Mon-Sun selector. Pure presentational: pass `days` (ISO strings) and per-day counts. */
+export default function WeekStrip({ days, selectedIso, todayIso, countsByDay = {}, onSelect }) {
+    return (
+        <Animate type="up" delay={120}>
+            <Card hover={false} className="!p-2">
+                <div role="tablist" aria-label="Week days" className="grid grid-cols-7 gap-1">
+                    {days.map((iso) => {
+                        const count = countsByDay[iso] || 0;
+                        const selected = iso === selectedIso;
+                        return (
+                            <button
+                                key={iso}
+                                type="button"
+                                role="tab"
+                                aria-selected={selected}
+                                onClick={() => onSelect(iso)}
+                                className={`flex flex-col items-start gap-1 rounded-xl px-4 py-3 text-left font-ui text-[11px] transition-colors focus-visible:outline-2 focus-visible:outline-sky-400 ${
+                                    selected ? "bg-[#2f5fa8] text-white" : "text-slate-300 hover:bg-white/5"
+                                }`}
+                            >
+                <span className="flex items-center gap-1.5 tracking-wide">
+                  {weekdayShort(iso)} {fromIso(iso).getDate()}
+                    {iso === todayIso && <span aria-label="Today" className="h-1.5 w-1.5 rounded-full bg-sky-300" />}
+                </span>
+                                <span className={`text-[10px] ${selected ? "text-slate-200" : "text-slate-500"}`}>
+                  {count ? `${count} ${count === 1 ? "session" : "sessions"}` : "—"}
+                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </Card>
+        </Animate>
+    );
+}
+</file>
+
+<file path="src/components/AuthButton (1).jsx">
+import LinkButton from "./LinkButton";
 
 export default function AuthButtons() {
   return (
     <>
-      <Button to="/login" variant="outline">Log In</Button>
-      <Button to="/register">Sign Up</Button>
+      <LinkButton to="/login" variant="outline">Log In</LinkButton>
+      <LinkButton to="/register">Sign Up</LinkButton>
     </>
   );
+}
+</file>
+
+<file path="src/components/AuthButton.jsx">
+import LinkButton from "./LinkButton";
+
+export default function AuthButtons() {
+  return (
+    <>
+      <LinkButton to="/login" variant="outline">Log In</LinkButton>
+      <LinkButton to="/register">Sign Up</LinkButton>
+    </>
+  );
+}
+</file>
+
+<file path="src/components/AuthContext.jsx">
+import { createContext, useContext, useState } from "react";
+import {
+    login as loginRequest,
+    register as registerRequest,
+} from "../services/authService";
+
+const AuthContext = createContext(null);
+const KEY = "fittrack-user";
+
+// Read the saved user (if any) so a page refresh doesn't log you out
+function readSavedUser() {
+    try { return JSON.parse(sessionStorage.getItem(KEY)); } catch { return null; }
+}
+
+export function AuthProvider({ children }) {
+    const [user, setUserState] = useState(readSavedUser);
+
+    function setUser(next) {
+        setUserState(next);
+        try {
+            if (next) sessionStorage.setItem(KEY, JSON.stringify(next));
+            else sessionStorage.removeItem(KEY);
+        } catch { /* storage unavailable */ }
+    }
+
+    async function loginUser(credentials) {
+        const loggedInUser = await loginRequest(credentials);
+        setUser(loggedInUser);
+        return loggedInUser;
+    }
+
+    async function registerUser(payload, { autoLogin = true } = {}) {
+        const createdUser = await registerRequest(payload);
+        if (autoLogin) {
+            setUser(createdUser);
+        }
+        return createdUser;
+    }
+
+    function logoutUser() {
+        setUser(null);
+    }
+
+    return (
+        <AuthContext.Provider
+            value={{
+                user,
+                login: loginUser,
+                register: registerUser,
+                logout: logoutUser,
+            }}
+        >
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+export function useAuth() {
+    const ctx = useContext(AuthContext);
+    if (!ctx) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return ctx;
 }
 </file>
 
@@ -1886,6 +2991,37 @@ export default function Hero({ image = "/assets/hero-gym.png", className = "", c
 }
 </file>
 
+<file path="src/components/LinkButton.jsx">
+import { Link } from "react-router-dom";
+
+const variants = {
+  solid: "bg-blue-500 hover:bg-blue-600",
+  outline: "border-2 border-white hover:bg-white/10",
+};
+
+const sizes = {
+  sm: "rounded-full px-5 py-2 text-base md:px-9 md:text-xl",
+  lg: "rounded-[30px] px-10 py-4 text-xl md:px-12 md:text-2xl",
+};
+
+// Pass `to` to render a router <Link>; otherwise renders a <button>.
+export default function LinkButton({ to, variant = "solid", size = "sm", className = "", children, ...props }) {
+  const classes = `inline-block font-ui font-bold text-white transition ${variants[variant]} ${sizes[size]} ${className}`;
+  if (to) {
+    return (
+      <Link to={to} className={classes} {...props}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button className={classes} {...props}>
+      {children}
+    </button>
+  );
+}
+</file>
+
 <file path="src/components/LogDetails.jsx">
 import StatusBadge from "./StatusBadge";
 
@@ -2001,18 +3137,18 @@ const sizes = {
   sm: { icon: "h-8 w-8", text: "text-xl" },
 };
 
-export default function Logo({ size = "md", className = "" }) {
+// The one FitTrack logo. size: "md" | "sm". scale: optional number (used by the sign-up page).
+export default function Logo({ size = "md", scale, className = "", style }) {
   const s = sizes[size];
+  const scaled = scale ? { transform: `scale(${scale})`, transformOrigin: "left center", ...style } : style;
   return (
-    <Link to="/" className={`flex items-center gap-2 ${className}`} aria-label="FitTrack home">
-      {/* shrink-0 stops the icon being squeezed away in narrow containers */}
+    <Link to="/" className={`flex items-center gap-2 ${className}`} style={scaled} aria-label="FitTrack home">
       <svg viewBox="0 0 48 48" className={`${s.icon} shrink-0 text-blue-500`} aria-hidden="true">
         <path d="M6 12h17v9H15v5h10v9H15v11H6z" fill="currentColor" />
         <path d="M27 25 40 12" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
         <path d="M30 8h12v12" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <span className={`font-sans font-bold tracking-tight text-white ${s.text}`}>FitTrack</span>
-
     </Link>
   );
 }
@@ -2628,29 +3764,23 @@ export function LineChart({
 <file path="src/components/MemberLayout.jsx">
 import { Bell, ClipboardList } from "lucide-react";
 import Sidebar from "./Sidebar";
+import { useAuth } from "../context/AuthContext";
 
-// Shared shell for member pages.
-// Optional props:
-// - heading / subtitle: replace the default "Welcome, <firstName>!" heading
-// - photo={false}: renders a plain dark background instead of the gym hero image
+// Shared shell for every member page (sidebar, top bar, welcome heading, gym background).
+// The name comes from the logged-in user; pass userName / firstName only to override it.
+// Optional: heading / subtitle replace "Welcome, <name>!"; photo={false} gives a plain dark background.
 export default function MemberLayout({
-  pageTitle,
-  PageIcon = ClipboardList,
-  userName = "Dela Cruz, Juan",
-  firstName = "Juan",
-  heading,
-  subtitle,
-  photo = true,
-  children,
+  pageTitle, PageIcon = ClipboardList, userName, firstName, heading, subtitle, photo = true, children,
 }) {
+  const { user } = useAuth();
+  const fullName = userName ?? user?.fullName ?? "Guest";
+  const first = firstName ?? fullName.split(" ")[0];
+
   return (
     <div className="relative min-h-screen bg-[#090e16] font-body text-white">
       {photo && (
         <>
-          <div
-            className="absolute inset-0 bg-cover bg-top animate-fade-in"
-            style={{ backgroundImage: "url('/assets/hero-image.jpg')" }}
-          />
+          <div className="absolute inset-0 bg-cover bg-top animate-fade-in" style={{ backgroundImage: "url('/assets/hero-image.jpg')" }} />
           <div className="absolute inset-0 bg-black/70" />
         </>
       )}
@@ -2659,10 +3789,7 @@ export default function MemberLayout({
         <Sidebar />
 
         <div className="flex min-w-0 flex-1 flex-col lg:pl-2">
-          <header
-            className="animate-fade-in flex items-center justify-between gap-4"
-            style={{ animationDelay: "150ms" }}
-          >
+          <header className="animate-fade-in flex items-center justify-between gap-4" style={{ animationDelay: "150ms" }}>
             <div className="flex items-center gap-3">
               <PageIcon className="h-7 w-7" strokeWidth={1.5} />
               <span className="h-7 border-l-2 border-[#3b4a60]" />
@@ -2672,30 +3799,19 @@ export default function MemberLayout({
               <Bell className="h-6 w-6 fill-white" />
               <span className="h-8 border-l-2 border-[#3b4a60]" />
               <span className="h-10 w-10 rounded-full bg-[#d9d9d9]" />
-              <span className="hidden font-sans text-xs font-medium sm:block">
-                {userName}
-              </span>
+              <span className="hidden font-sans text-xs font-medium sm:block">{fullName}</span>
             </div>
           </header>
 
-          <div
-            className="animate-fade-up mt-4 lg:mt-6"
-            style={{ animationDelay: "250ms" }}
-          >
+          <div className="animate-fade-up mt-4 lg:mt-6" style={{ animationDelay: "250ms" }}>
             {heading ? (
               <>
-                <h1 className="font-sans text-3xl font-semibold lg:text-4xl">
-                  {heading}
-                </h1>
-                {subtitle && (
-                  <p className="mt-1 font-sans text-sm text-white/60">
-                    {subtitle}
-                  </p>
-                )}
+                <h1 className="font-sans text-3xl font-semibold lg:text-4xl">{heading}</h1>
+                {subtitle && <p className="mt-1 font-sans text-sm text-white/60">{subtitle}</p>}
               </>
             ) : (
               <h1 className="font-sans text-3xl font-semibold lg:text-4xl">
-                Welcome, <span className="text-[#60a5fa]">{firstName}!</span>
+                Welcome, <span className="text-[#60a5fa]">{first}!</span>
               </h1>
             )}
           </div>
@@ -3025,6 +4141,17 @@ export default function ProgressChart({ points, month, xTicks }) {
 }
 </file>
 
+<file path="src/components/RequireAuth.jsx">
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+// Wrap every page that needs a logged-in user: <Route element={<RequireAuth />}> ...routes... </Route>
+export default function RequireAuth() {
+  const { user } = useAuth();
+  return user ? <Outlet /> : <Navigate to="/login" replace />;
+}
+</file>
+
 <file path="src/components/RescheduleForm.jsx">
 import { useState } from "react";
 import { TIME_SLOTS, fmtDate } from "../data/workoutPlans";
@@ -3175,10 +4302,12 @@ export default function SectionCard({ title, delay = 0, right, className = "", c
 </file>
 
 <file path="src/components/Sidebar.jsx">
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { House, Sparkles, CircleUser, Dumbbell, ClipboardList, TrendingUp, Settings, LogOut } from "lucide-react";
 import Logo from "./Logo";
+import { useAuth } from "../context/AuthContext";
 
+// The single sidebar for every member page.
 const links = [
   { to: "/member/dashboard", label: "Dashboard", Icon: House },
   { to: "/member/membership", label: "Membership", Icon: Sparkles },
@@ -3190,6 +4319,13 @@ const links = [
 ];
 
 export default function Sidebar() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <aside className="animate-slide-right flex flex-col rounded-[25px] bg-[#1f2937] p-4 lg:w-[154px] lg:shrink-0 lg:px-3 lg:py-5">
       <Logo size="sm" />
@@ -3212,11 +4348,11 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-4 hidden border-t border-white/20 pt-4 lg:block">
-        <NavLink to="/" className="flex items-center gap-2 px-2 text-xs font-medium text-white hover:text-blue-300">
+      <div className="mt-4 border-t border-white/20 pt-4">
+        <button onClick={handleLogout} className="flex items-center gap-2 px-2 text-xs font-medium text-white transition hover:text-blue-300">
           <LogOut className="h-5 w-5" strokeWidth={1.5} />
           Logout
-        </NavLink>
+        </button>
       </div>
     </aside>
   );
@@ -3243,6 +4379,168 @@ export default function StatusBadge({ status }) {
 }
 </file>
 
+<file path="src/components/TrainerShell.jsx">
+import { Link, NavLink } from "react-router-dom";
+import { Calendar, CalendarDays, ClipboardList, Dumbbell, House, LogOut, TrendingUp } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useTrainerStore } from "../data/trainerStore";
+
+// Shared shell for trainer pages: gym header, sidebar, top bar, welcome text.
+// Figma frame "Trainer / Dashboard" (94:17). Reuse it for the other trainer
+// pages (workout plans, diet plans, rescheduling...) by passing different
+// `breadcrumb` / `title` / children.
+
+// `gap` reproduces the (uneven) spacing between the rows in the Figma sidebar.
+const NAV = [
+  { to: "/trainer/dashboard", label: "Dashboard", Icon: House, gap: "" },
+  { to: "/trainer/workout-plans", label: "Workout plans", Icon: Dumbbell, gap: "lg:mt-[14px]" },
+  { to: "/trainer/diet-plans", label: "Diet plans", Icon: ClipboardList, gap: "lg:mt-[14px]" },
+  { to: "/trainer/rescheduling", label: "Rescheduling", Icon: CalendarDays, gap: "lg:mt-[14px]" },
+  { to: "/trainer/body-metrics", label: "Body Metrics", Icon: TrendingUp, gap: "lg:mt-[5px]" },
+  { to: "/trainer/schedule", label: "My schedule", Icon: Calendar, gap: "lg:mt-[31px]" },
+];
+
+const INTER_FONTS = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap";
+
+function hideBrokenImage(event) {
+  event.currentTarget.style.display = "none";
+}
+
+export default function TrainerShell({
+  breadcrumb = "Dashboard",
+  title,
+  subtitle,
+  trainerName = "John Smith",
+  trainerRole = "Personal trainer",
+  avatarSrc = "/assets/trainer-avatar.png",
+  headerImageSrc = "/assets/trainer-gym-header.png",
+  children,
+}) {
+  const { logout } = useAuth();
+  const { requests } = useTrainerStore();
+  const pendingCount = requests.filter((r) => r.status === "pending").length;
+
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-[#080d14] text-[#f8fafc] [font-family:Inter,ui-sans-serif,system-ui,sans-serif]">
+      {/* Loads Inter without touching index.html */}
+      <link rel="stylesheet" href={INTER_FONTS} />
+
+      {/* Gym header photo (Figma: 1279 x 165, 76% black veil) */}
+      <div className="animate-fade-in pointer-events-none absolute inset-x-0 top-0 h-[165px] overflow-hidden">
+        <img src={headerImageSrc} alt="" onError={hideBrokenImage} className="size-full object-cover" />
+        <div className="absolute inset-0 bg-black/[0.76]" />
+      </div>
+
+      <div className="relative flex min-h-screen flex-col gap-4 p-4 lg:flex-row lg:gap-6 lg:pr-[25px]">
+        {/* ---- Sidebar (Figma: 184 x 868, radius 25) ---- */}
+        <aside className="animate-slide-right flex flex-col rounded-[25px] bg-[#1f2937] lg:min-h-[868px] lg:w-[184px] lg:shrink-0">
+          <div className="relative h-16 shrink-0 lg:h-[138px]">
+            <img
+              src="/assets/fittrack-emblem.svg"
+              alt=""
+              onError={hideBrokenImage}
+              className="absolute left-6 top-[16px] w-[21px] lg:top-[30px]"
+            />
+            <span className="absolute left-[59px] top-[16px] text-[22px] font-bold leading-[31px] lg:top-[28px]">FitTrack</span>
+            <span className="absolute left-[23px] top-[76px] hidden whitespace-nowrap text-[9px] font-semibold leading-[13px] text-[#afbdcf] lg:block">
+              TRAINER WORKSPACE
+            </span>
+          </div>
+
+          <nav
+            aria-label="Trainer"
+            className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:gap-0 lg:overflow-visible lg:pb-0"
+          >
+            {NAV.map(({ to, label, Icon, gap }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `flex h-[43px] shrink-0 items-center gap-[9px] whitespace-nowrap rounded-[10px] pl-3 pr-4 text-xs transition-all duration-200 lg:w-[160px] lg:pr-0 ${gap} ${
+                    isActive
+                      ? "bg-[#243e63] font-semibold text-[#76adff]"
+                      : "font-medium text-[#f8fafc] hover:bg-white/[0.06] hover:pl-[15px]"
+                  }`
+                }
+              >
+                <Icon className="size-[18px] shrink-0" strokeWidth={1.6} aria-hidden="true" />
+                {label}
+                {to === "/trainer/rescheduling" && pendingCount > 0 && (
+                  <span
+                    key={pendingCount}
+                    aria-label={`${pendingCount} pending requests`}
+                    className="animate-pop-in ml-auto grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#453923] px-1 text-[10px] font-semibold text-[#f8cf7d] lg:mr-3"
+                  >
+                    {pendingCount}
+                  </span>
+                )}
+              </NavLink>
+            ))}
+
+            {/* Phones: logout lives in the nav strip */}
+            <Link
+              to="/login"
+              onClick={logout}
+              className="flex h-[43px] shrink-0 items-center gap-[9px] whitespace-nowrap rounded-[10px] pl-3 pr-4 text-xs font-medium text-[#f8fafc] hover:bg-white/[0.06] lg:hidden"
+            >
+              <LogOut className="size-[18px] shrink-0" strokeWidth={1.6} aria-hidden="true" />
+              Log out
+            </Link>
+          </nav>
+
+          {/* Coach block + logout (desktop) */}
+          <div className="mt-auto hidden px-[23px] pb-[42px] lg:block">
+            <p className="text-[9px] font-semibold leading-[13px] text-[#afbdcf]">COACH WORKSPACE</p>
+            <p className="mt-[11px] text-sm font-semibold leading-5 text-[#f8fafc]">{trainerName}</p>
+            <p className="mt-[3px] text-xs leading-[17px] text-[#afbdcf]">{trainerRole}</p>
+            <hr className="mb-0 mt-7 h-px w-[138px] border-0 bg-[#374658]" />
+            <Link
+              to="/login"
+              onClick={logout}
+              className="mt-[23px] flex items-center gap-[10px] pl-px text-xs font-medium leading-[17px] text-[#f8fafc] transition-colors hover:text-[#76adff]"
+            >
+              <LogOut className="size-[18px] shrink-0" strokeWidth={1.6} aria-hidden="true" />
+              Log out
+            </Link>
+          </div>
+        </aside>
+
+        {/* ---- Main column ---- */}
+        <div className="flex min-w-0 flex-1 flex-col lg:mb-[9px]">
+          <header
+            className="animate-fade-in flex items-start justify-between gap-4"
+            style={{ animationDelay: "120ms" }}
+          >
+            <div className="min-w-0 pt-[10px]">
+              <p className="text-xs font-medium leading-[17px] text-[#afbdcf]">
+                Trainer workspace <span className="mx-1">/</span> {breadcrumb}
+              </p>
+              <h1 className="mt-[17px] text-[26px] font-semibold leading-[38px] sm:text-[32px] sm:leading-[46px]">
+                {title}
+              </h1>
+              {subtitle && <p className="mt-[5px] text-[13px] leading-[19px] text-[#afbdcf]">{subtitle}</p>}
+            </div>
+
+            {/* Account pill (Figma: 204 x 51, radius 26) */}
+            <div className="mt-[7px] flex h-[51px] shrink-0 items-center gap-[11px] rounded-[26px] bg-[#1f2937] pl-2 pr-5 lg:min-w-[204px]">
+              <span className="relative size-[37px] shrink-0 overflow-hidden rounded-[20px] bg-[#2c3a4d]">
+                <img src={avatarSrc} alt="" onError={hideBrokenImage} className="size-full object-cover object-top" />
+              </span>
+              <span className="hidden flex-col gap-[2px] sm:flex">
+                <span className="whitespace-nowrap text-xs font-semibold leading-[17px]">{trainerName}</span>
+                <span className="whitespace-nowrap text-[10px] leading-[15px] text-[#afbdcf]">{trainerRole}</span>
+              </span>
+            </div>
+          </header>
+
+          <main className="mt-[30px]">{children}</main>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
 <file path="src/context/AuthContext.jsx">
 import { createContext, useContext, useState } from "react";
 import {
@@ -3251,9 +4549,23 @@ import {
 } from "../services/authService";
 
 const AuthContext = createContext(null);
+const KEY = "fittrack-user";
+
+// Read the saved user (if any) so a page refresh doesn't log you out
+function readSavedUser() {
+    try { return JSON.parse(sessionStorage.getItem(KEY)); } catch { return null; }
+}
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
+    const [user, setUserState] = useState(readSavedUser);
+
+    function setUser(next) {
+        setUserState(next);
+        try {
+            if (next) sessionStorage.setItem(KEY, JSON.stringify(next));
+            else sessionStorage.removeItem(KEY);
+        } catch { /* storage unavailable */ }
+    }
 
     async function loginUser(credentials) {
         const loggedInUser = await loginRequest(credentials);
@@ -3390,6 +4702,322 @@ export const trainerMessage =
 
 <file path="src/data/tierStyles.js">
 export const tierText = { Bronze: "text-[#e0a030]", Silver: "text-slate-200", Gold: "text-yellow-300" };
+</file>
+
+<file path="src/data/trainerDashboard.js">
+// Sample content for the Trainer Dashboard, copied from the Figma frame
+// "Trainer / Dashboard" (94:17).
+//
+// There is no trainer endpoint on the backend yet (dashboardService.js has
+// getTrainerDashboard marked [TODO]), so the page shows this until you pass
+// real data in with <TrainerDashboard data={...} />. Keep the same shape.
+//
+// workout / diet: "active" | "not-set"
+export const trainerDashboardSample = {
+  trainer: { name: "John Smith", role: "Personal trainer" },
+
+  stats: [
+    { label: "Active clients", value: 4, note: "All clients on track", tone: "muted" },
+    { label: "Sessions today", value: 3, note: "Next session at 9:00 AM", tone: "muted" },
+    { label: "Pending requests", value: 3, note: "Awaiting your review", tone: "warn" },
+    { label: "Active plans", value: 7, note: "4 workout · 3 diet", tone: "muted" },
+  ],
+
+  clients: [
+    { id: "c1", name: "Juan Dela Cruz", goal: "Muscle gain", workout: "active", diet: "active", nextSession: "Today, 9:00 AM" },
+    { id: "c2", name: "Maria Santos", goal: "Weight loss", workout: "active", diet: "active", nextSession: "Today, 11:00 AM" },
+    { id: "c3", name: "Carlo Reyes", goal: "Strength", workout: "active", diet: "active", nextSession: "Today, 2:00 PM" },
+    { id: "c4", name: "Ana Garcia", goal: "General fitness", workout: "active", diet: "not-set", nextSession: "Nov 20, 8:00 AM" },
+  ],
+
+  attention: {
+    count: 1,
+    title: "Complete Ana’s nutrition plan",
+    text: "Her workout plan is ready. Add a diet plan before the next session.",
+    cta: "Create diet plan",
+    to: "/trainer/diet-plans",
+    checkIn: "Next check-in: Nov 20",
+  },
+
+  sessionsDate: "Thursday, November 19, 2026",
+  sessions: [
+    { id: "s1", time: "09:00 AM", client: "Juan Dela Cruz", detail: "Upper body push · 60 min" },
+    { id: "s2", time: "11:00 AM", client: "Maria Santos", detail: "Full body circuit · 45 min" },
+    { id: "s3", time: "02:00 PM", client: "Carlo Reyes", detail: "Strength foundation · 60 min" },
+  ],
+
+  requests: {
+    count: 3,
+    text: "Review changes before your next session.",
+    to: "/trainer/rescheduling",
+  },
+};
+</file>
+
+<file path="src/data/trainerSchedule.js">
+// Dummy data for the trainer schedule.
+//
+// Session shape mirrors the backend `TrainingSession` model (id, memberId, trainerId, title,
+// date, startTime, durationMinutes, status) plus a few fields the API will need to join in
+// (memberName, focus, note). When the backend endpoint exists, only
+// services/trainerScheduleService.js needs to change; nothing here is imported by the UI.
+//
+// Status values:
+//   COMPLETED  - finished (backend Status.COMPLETED)
+//   STARTED    - trainer started it (backend Status.STARTED)
+//   NO_SHOW    - client did not attend (backend Status.NO_SHOW)
+//   SCHEDULED  - due now, awaiting the trainer to start / mark no-show
+//   UPCOMING   - later today / later in the week (UI label only; the backend can derive this
+//                from date + startTime, so it does not need to be stored)
+
+import { addDays, startOfWeek } from "../utils/scheduleDates";
+
+export const DEMO_TRAINER_ID = "T-TEST-001";
+
+// Keyed by day offset from Monday (0 = Mon ... 6 = Sun).
+const WEEK_TEMPLATE = {
+    4: [
+        { memberId: "M-002", memberName: "Ana Garcia", title: "Fitness starter", focus: "Personal training", startTime: "08:00:00", durationMinutes: 45, status: "COMPLETED" },
+        { memberId: "M-TEST-001", memberName: "Juan Dela Cruz", title: "Upper body push", focus: "Personal training", startTime: "09:00:00", durationMinutes: 60, status: "SCHEDULED", note: "Awaiting acknowledgement" },
+        { memberId: "M-003", memberName: "Maria Santos", title: "Full body circuit", focus: "Personal training", startTime: "11:00:00", durationMinutes: 45, status: "UPCOMING" },
+        { memberId: "M-004", memberName: "Carlo Reyes", title: "Strength foundation", focus: "Personal training", startTime: "14:00:00", durationMinutes: 60, status: "UPCOMING" },
+    ],
+    5: [
+        { memberId: "M-005", memberName: "Rafael Lim", title: "Mobility and core", focus: "Personal training", startTime: "10:00:00", durationMinutes: 45, status: "UPCOMING" },
+        { memberId: "M-006", memberName: "Bea Navarro", title: "Lower body strength", focus: "Personal training", startTime: "13:00:00", durationMinutes: 60, status: "UPCOMING" },
+    ],
+};
+
+export function buildSeedWeek(weekStartIso, trainerId = DEMO_TRAINER_ID) {
+    const monday = startOfWeek(weekStartIso);
+    return Object.entries(WEEK_TEMPLATE).flatMap(([offset, rows]) => {
+        const date = addDays(monday, Number(offset));
+        return rows.map((row, i) => ({
+            id: `TS-${date}-${i + 1}`,
+            trainerId,
+            date,
+            note: null,
+            ...row,
+        }));
+    });
+}
+
+export const DEMO_TRAINER_PROFILE = {
+    id: DEMO_TRAINER_ID,
+    fullName: "John Smith",
+    title: "Personal trainer",
+    avatarSrc: null,
+};
+</file>
+
+<file path="src/data/trainerStore.js">
+import { useSyncExternalStore } from "react";
+
+// Tiny shared store for the trainer pages (no provider, no extra dependency).
+//
+// Why it exists: the dashboard, plans, rescheduling and body-metrics pages all
+// need to see the same clients. Assigning a plan, approving a request or saving
+// a measurement on one page shows up on the others and in the sidebar badge.
+//
+// IMPORTANT: this is in-memory only. There are no trainer endpoints on the
+// backend yet, so a page refresh resets everything to the Figma sample data
+// below. When the API exists, replace the actions at the bottom with fetch calls.
+
+const clients = [
+  { id: "juan", name: "Juan Dela Cruz", goal: "Muscle gain", workout: "active", diet: "active", nextSession: "Today, 9:00 AM", heightM: 1.75, targetKg: 80 },
+  { id: "maria", name: "Maria Santos", goal: "Weight loss", workout: "active", diet: "active", nextSession: "Today, 11:00 AM", heightM: null, targetKg: null },
+  { id: "carlo", name: "Carlo Reyes", goal: "Strength", workout: "active", diet: "active", nextSession: "Today, 2:00 PM", heightM: null, targetKg: null },
+  { id: "ana", name: "Ana Garcia", goal: "General fitness", workout: "active", diet: "not-set", nextSession: "Nov 20, 8:00 AM", heightM: null, targetKg: null },
+];
+
+const exercise = (id, name, sets, reps, rest, load) => ({ id, name, sets, reps, rest, load });
+
+const workoutPlans = [
+  { id: "w1", name: "Upper body push", clientId: "juan", duration: "4 weeks", status: "assigned" },
+  { id: "w2", name: "Full body circuit", clientId: "maria", duration: "4 weeks", status: "assigned" },
+  { id: "w3", name: "Strength foundation", clientId: "carlo", duration: "6 weeks", status: "assigned" },
+  { id: "w4", name: "Fitness starter", clientId: "ana", duration: "4 weeks", status: "assigned" },
+];
+
+const dietPlans = [
+  { id: "d1", name: "Muscle gain nutrition", clientId: "juan", status: "assigned" },
+  { id: "d2", name: "Balanced weight loss", clientId: "maria", status: "assigned" },
+  { id: "d3", name: "Strength nutrition", clientId: "carlo", status: "assigned" },
+  { id: "d4", name: "Balanced daily nutrition", clientId: "ana", status: "draft" },
+];
+
+// What the editors show first (copied from the Figma frames).
+export const workoutDraftSeed = {
+  planId: null,
+  basedOn: "w1",
+  name: "Upper body push — progression",
+  clientId: "juan",
+  goal: "Muscle gain",
+  duration: "4 weeks",
+  frequency: "3 days / week",
+  startDate: "2026-11-23",
+  notes: "Warm up for 5–10 minutes. Keep 1–2 reps in reserve.",
+  attachment: "",
+  activeDay: "mon",
+  days: [
+    {
+      id: "mon",
+      label: "Mon · Push",
+      exercises: [
+        exercise("e1", "Barbell bench press", "4", "8–10", "90 sec", "40 kg"),
+        exercise("e2", "Incline dumbbell press", "3", "10–12", "60 sec", "15 kg"),
+        exercise("e3", "Cable triceps pushdown", "3", "12–15", "60 sec", "20 kg"),
+      ],
+    },
+    { id: "wed", label: "Wed · Pull", exercises: [] },
+    { id: "fri", label: "Fri · Legs", exercises: [] },
+  ],
+};
+
+export const dietDraftSeed = {
+  planId: "d4",
+  basedOn: "d4",
+  name: "Balanced daily nutrition",
+  clientId: "ana",
+  goal: "General fitness",
+  duration: "4 weeks",
+  preference: "No restrictions",
+  startDate: "2026-11-23",
+  waterL: "2.5",
+  attachment: "",
+  macros: { kcal: "2,200", protein: "140", carbs: "275", fats: "60" },
+  meals: [
+    { id: "m1", name: "Breakfast", time: "7:00 AM", food: "Oats, Greek yogurt & banana", portion: "1 bowl · 60 g oats, 200 g yogurt, 1 banana", kcal: "500" },
+    { id: "m2", name: "Lunch", time: "12:00 PM", food: "Chicken, brown rice & vegetables", portion: "150 g chicken · 200 g rice · 1 cup vegetables", kcal: "700" },
+    { id: "m3", name: "Snack", time: "3:00 PM", food: "Greek yogurt & mixed nuts", portion: "200 g yogurt · 30 g nuts", kcal: "350" },
+    { id: "m4", name: "Dinner", time: "7:00 PM", food: "Salmon & sweet potato", portion: "150 g salmon · 250 g sweet potato · greens", kcal: "650" },
+  ],
+};
+
+// Dates are ISO local strings so the UI can work out weekday and end time.
+const requests = [
+  {
+    id: "r1", clientId: "juan", title: "Upper body push", minutes: 60, status: "pending", receivedMin: 15,
+    from: "2026-11-20T09:00", to: "2026-11-21T10:00",
+    reason: "I have a work commitment on Friday morning. Could we move our session to Saturday at 10 AM?",
+  },
+  { id: "r2", clientId: "maria", title: "Full body circuit", minutes: 45, status: "pending", receivedMin: 60, from: "2026-11-21T11:00", to: "2026-11-23T11:00", reason: "" },
+  { id: "r3", clientId: "ana", title: "Fitness starter", minutes: 45, status: "pending", receivedMin: 120, from: "2026-11-20T08:00", to: "2026-11-21T08:00", reason: "" },
+];
+
+// Body metrics are only in Figma for Juan. Other clients start empty.
+// Rows after the first are SAMPLE values so the table and chart have history;
+// replace them with API data.
+const juanChart = [
+  [1, 69.4], [3, 70.1], [5, 70.8], [7, 71.2], [10, 71.8], [12, 71.2], [14, 70.9], [16, 71.5],
+  [18, 72.1], [20, 72.7], [22, 73.0], [24, 73.3], [26, 73.8], [28, 74.1], [30, 74.5],
+];
+
+const metrics = {
+  juan: {
+    chart: juanChart.map(([day, y]) => ({ day, y })),
+    history: [
+      { id: "h1", date: "Nov 12, 2026", weight: "78.4", fat: "15.2", muscle: "63.1", bmi: "25.6", note: "Slight water drop, strength up" },
+    ],
+  },
+  maria: { chart: [], history: [] },
+  carlo: { chart: [], history: [] },
+  ana: { chart: [], history: [] },
+};
+
+let state = { clients, workoutPlans, dietPlans, requests, metrics, flash: null };
+const listeners = new Set();
+
+const set = (patch) => {
+  state = { ...state, ...patch };
+  listeners.forEach((fn) => fn());
+};
+
+const subscribe = (fn) => {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+};
+
+export const useTrainerStore = () => useSyncExternalStore(subscribe, () => state);
+export const getClient = (id) => state.clients.find((c) => c.id === id);
+
+const updateClient = (id, patch) => set({ clients: state.clients.map((c) => (c.id === id ? { ...c, ...patch } : c)) });
+let seq = 100;
+const nextId = (prefix) => `${prefix}${++seq}`;
+
+// ---- plans -----------------------------------------------------------------
+export function saveWorkoutPlan(draft, status) {
+  const id = draft.planId || nextId("w");
+  const plan = { id, name: draft.name.trim(), clientId: draft.clientId, duration: draft.duration, status, data: { ...draft, planId: id } };
+  const exists = state.workoutPlans.some((p) => p.id === id);
+  set({ workoutPlans: exists ? state.workoutPlans.map((p) => (p.id === id ? plan : p)) : [...state.workoutPlans, plan] });
+  if (status === "assigned" && draft.clientId) updateClient(draft.clientId, { workout: "active" });
+  return id;
+}
+
+export function saveDietPlan(draft, status) {
+  const id = draft.planId || nextId("d");
+  const plan = { id, name: draft.name.trim(), clientId: draft.clientId, status, data: { ...draft, planId: id } };
+  const exists = state.dietPlans.some((p) => p.id === id);
+  set({ dietPlans: exists ? state.dietPlans.map((p) => (p.id === id ? plan : p)) : [...state.dietPlans, plan] });
+  if (status === "assigned" && draft.clientId) updateClient(draft.clientId, { diet: "active" });
+  return id;
+}
+
+// ---- rescheduling ----------------------------------------------------------
+export function resolveRequest(id, status, reply = "", suggestion = "") {
+  const req = state.requests.find((r) => r.id === id);
+  if (!req) return;
+  set({ requests: state.requests.map((r) => (r.id === id ? { ...r, status, reply, suggestion } : r)) });
+  if (status === "approved") updateClient(req.clientId, { nextSession: formatShort(req.to) });
+}
+
+// ---- metrics ---------------------------------------------------------------
+export function saveMetric(clientId, entry) {
+  const m = state.metrics[clientId] || { chart: [], history: [] };
+  const day = entry.day;
+  const chart =
+    day > 0
+      ? [...m.chart.filter((p) => p.day !== day), { day, y: Number(entry.muscle) }].sort((a, b) => a.day - b.day)
+      : m.chart;
+  const history = [{ id: nextId("h"), ...entry.row }, ...m.history];
+  set({ metrics: { ...state.metrics, [clientId]: { chart, history } } });
+}
+
+// ---- shared date helpers ---------------------------------------------------
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const parse = (iso) => {
+  const [d, t] = iso.split("T");
+  const [y, mo, da] = d.split("-").map(Number);
+  const [h, mi] = t.split(":").map(Number);
+  return { y, mo: mo - 1, da, h, mi };
+};
+const clock = (h, mi) => `${((h + 11) % 12) + 1}:${String(mi).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+
+export function formatShort(iso) {
+  const p = parse(iso);
+  return `${MONTHS[p.mo]} ${p.da}, ${clock(p.h, p.mi)}`;
+}
+export function formatDay(iso) {
+  const p = parse(iso);
+  return `${DAYS[new Date(p.y, p.mo, p.da).getDay()]}, ${MONTHS[p.mo]} ${p.da}, ${p.y}`;
+}
+export function formatRange(iso, minutes) {
+  const p = parse(iso);
+  const end = p.h * 60 + p.mi + minutes;
+  const startLabel = clock(p.h, p.mi);
+  const endLabel = clock(Math.floor(end / 60) % 24, end % 60);
+  // "9:00–10:00 AM" when both are the same half of the day.
+  return startLabel.slice(-2) === endLabel.slice(-2)
+    ? `${startLabel.slice(0, -3)}–${endLabel}`
+    : `${startLabel}–${endLabel}`;
+}
+export function formatLong(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${MONTHS[m - 1]} ${d}, ${y}`;
+}
+export const MONTH_NAMES = MONTHS;
 </file>
 
 <file path="src/data/workoutLogs.js">
@@ -3568,14 +5196,134 @@ export function useDashboard(fetcher, id) {
 }
 </file>
 
+<file path="src/hooks/useTrainerSchedule.js">
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { completeSession, getSchedule, markNoShow, startSession } from "../services/trainerScheduleService";
+import { addDays, startOfWeek, todayIso, weekDays } from "../utils/scheduleDates";
+
+const byTime = (a, b) => a.startTime.localeCompare(b.startTime);
+
+/**
+ * State and actions for the trainer "My schedule" page.
+ * Backend-agnostic: all I/O goes through services/trainerScheduleService.js.
+ */
+export function useTrainerSchedule(trainerId) {
+    const today = todayIso();
+    const [weekStart, setWeekStart] = useState(() => startOfWeek(today));
+    const [sessions, setSessions] = useState([]);
+    const [selectedDate, setSelectedDate] = useState(today);
+    const [selectedId, setSelectedId] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState(null);
+
+    // Load the visible week.
+    useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+        setError(null);
+        getSchedule(trainerId, weekStart)
+            .then((data) => {
+                if (cancelled) return;
+                const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date) || byTime(a, b));
+                setSessions(sorted);
+                setSelectedDate((current) => {
+                    const days = weekDays(weekStart);
+                    if (days.includes(current)) return current;
+                    if (days.includes(today)) return today;
+                    return sorted[0]?.date ?? weekStart;
+                });
+                setSelectedId(null);
+            })
+            .catch((e) => !cancelled && setError(e.message || "Could not load schedule"))
+            .finally(() => !cancelled && setLoading(false));
+        return () => {
+            cancelled = true;
+        };
+    }, [trainerId, weekStart, today]);
+
+    // First load: if today is empty, jump to the first day that has sessions.
+    useEffect(() => {
+        if (loading || !sessions.length) return;
+        if (!sessions.some((s) => s.date === selectedDate) && selectedDate === today) {
+            setSelectedDate(sessions[0].date);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading, sessions]);
+
+    const days = useMemo(() => weekDays(weekStart), [weekStart]);
+
+    const countsByDay = useMemo(() => {
+        const counts = {};
+        sessions.forEach((s) => (counts[s.date] = (counts[s.date] || 0) + 1));
+        return counts;
+    }, [sessions]);
+
+    const daySessions = useMemo(() => sessions.filter((s) => s.date === selectedDate).sort(byTime), [sessions, selectedDate]);
+
+    const selectedSession = useMemo(() => {
+        if (!daySessions.length) return null;
+        return (
+            daySessions.find((s) => s.id === selectedId) ??
+            daySessions.find((s) => s.status === "SCHEDULED" || s.status === "STARTED") ??
+            daySessions[0]
+        );
+    }, [daySessions, selectedId]);
+
+    const summary = useMemo(() => {
+        const completed = daySessions.filter((s) => s.status === "COMPLETED").length;
+        return { total: daySessions.length, completed, remaining: daySessions.length - completed };
+    }, [daySessions]);
+
+    const replaceSession = (updated) => setSessions((list) => list.map((s) => (s.id === updated.id ? updated : s)));
+
+    const runAction = useCallback(async (fn, sessionId) => {
+        setBusy(true);
+        setError(null);
+        try {
+            replaceSession(await fn(sessionId));
+        } catch (e) {
+            setError(e.message || "Action failed");
+        } finally {
+            setBusy(false);
+        }
+    }, []);
+
+    return {
+        today,
+        weekStart,
+        days,
+        countsByDay,
+        selectedDate,
+        daySessions,
+        selectedSession,
+        summary,
+        loading,
+        busy,
+        error,
+        selectDate: (iso) => {
+            setSelectedDate(iso);
+            setSelectedId(null);
+        },
+        selectSession: setSelectedId,
+        nextWeek: () => setWeekStart((w) => addDays(w, 7)),
+        prevWeek: () => setWeekStart((w) => addDays(w, -7)),
+        thisWeek: () => setWeekStart(startOfWeek(today)),
+        start: (id) => runAction(startSession, id),
+        complete: (id) => runAction(completeSession, id),
+        markNoShow: (id) => runAction(markNoShow, id),
+    };
+}
+</file>
+
 <file path="src/pages/Member/MembershipPage.jsx">
 import { useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 import MemberLayout from "../../components/MemberLayout";
 import SectionCard from "../../components/SectionCard";
 import MembershipCard from "../../components/MembershipCard";
-import { useMembership } from "../../components/MembershipContext";
-import { tiers } from "../../data/memberships";
+import { useMembership } from "../../context/MembershipContext";
+import { tiers } from "../../components/Membership";
 import { tierText } from "../../data/tierStyles";
 import { fmtDate, iso, parseIso } from "../../data/workoutPlans";
 
@@ -3672,9 +5420,9 @@ export default function MembershipPage() {
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../components/Logo";
-import SampleQr from "../../components/SampleQr";
+import QrPanel from "../../components/QrPanel/QrPanel";
 import { useMembership } from "../../context/MembershipContext";
-import { tiers } from "../../data/memberships";
+import { tiers } from "../../components/Membership";
 
 const input = "w-full rounded-full bg-[#f1f5f9] px-6 py-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-400";
 
@@ -3741,9 +5489,7 @@ export default function PaymentPage() {
               </label>
               <div>
                 <span className="mb-1 block">Scan and Pay:</span>
-                <div key={tier.name} className="animate-pop-in mx-auto w-40 overflow-hidden rounded-2xl bg-white p-1">
-                  <SampleQr seed={tier.name} className="w-full" />
-                </div>
+                <QrPanel key={tier.name} src="/assets/payment-qr.png" size={160} className="animate-pop-in mx-auto" />
               </div>
               <label className="block">
                 <span className="mb-1 block">Reference Number:</span>
@@ -4488,7 +6234,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../../components/Button/Button';
 import Checkbox from '../../components/Checkbox/Checkbox';
 import { LockIcon, MailIcon } from '../../components/Icons/Icons';
-import Logo from '../../components/Logo/Logo';
+import Logo from '../../components/Logo';
 import PasswordStrength from '../../components/PasswordStrength/PasswordStrength';
 import TextField from '../../components/TextField/TextField';
 import { checkEmail } from '../../services/authService';
@@ -6269,6 +8015,1473 @@ export default function RegistrationDetails({
 }
 </file>
 
+<file path="src/pages/Trainer/TrainerBodyMetrics.jsx">
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { TrendingUp } from "lucide-react";
+import TrainerShell from "../../components/TrainerShell";
+import AnimatedLineChart from "../../components/trainer/AnimatedLineChart";
+import { Button, Card, CountUp, Notice, SearchInput, SelectInput, cx } from "../../components/trainer/TrainerUI";
+import { MONTH_NAMES, saveMetric, useTrainerStore } from "../../data/trainerStore";
+
+// Body Metrics  ->  route: /trainer/body-metrics
+// Figma frame "Trainer / Metrics Updates" (125:651), 1279 x 900.
+// (The Figma header copy says "Rescheduling"; this page is titled "Body Metrics".)
+
+const CHART_YEAR = 2026;
+const CHART_MONTH = 10; // November
+const X_TICKS = [1, 7, 14, 21, 28, 30].map((x) => ({ x, label: `Nov ${x}` }));
+
+const tile = "rounded-[25px] bg-[#1f2937]";
+const field =
+  "h-[30px] w-full rounded-[8px] bg-[#526176]/65 px-2 text-xs text-[#f8fafc] outline-none transition placeholder:text-white/30 hover:bg-[#526176]/80 focus:ring-2 focus:ring-[#3b82f6]/70";
+const COLS = "grid grid-cols-[96px_90px_100px_90px_70px_minmax(190px,1fr)] items-center gap-x-3";
+
+const lastFirst = (name) => {
+  const [first, ...rest] = name.split(" ");
+  return rest.length ? `${rest.join(" ")}, ${first}` : first;
+};
+
+function StatTile({ label, value, unit, decimals = 1 }) {
+  return (
+    <Card as="div" className={cx(tile, "flex h-[68px] flex-col px-[23px] pt-1")}>
+      <span className="whitespace-nowrap text-sm leading-[17px] text-white/50">{label}</span>
+      <span className="flex items-baseline justify-center gap-1">
+        <span className="text-[25px] font-bold leading-none tabular-nums text-white">
+          {value === null ? "—" : <CountUp key={value} value={value} decimals={decimals} />}
+        </span>
+        {unit && <span className="text-sm text-white/50">{unit}</span>}
+      </span>
+    </Card>
+  );
+}
+
+const EMPTY_FORM = { weight: "", fat: "", muscle: "", bmi: "", notes: "" };
+
+export default function TrainerBodyMetrics() {
+  const { clients, metrics } = useTrainerStore();
+  const [clientId, setClientId] = useState("juan");
+  const [query, setQuery] = useState("");
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [bmiTouched, setBmiTouched] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [month, setMonth] = useState("November 2026");
+
+  const client = clients.find((c) => c.id === clientId);
+  const { chart, history } = metrics[clientId] ?? { chart: [], history: [] };
+  const latest = history[0];
+
+  const shownClients = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return clients.filter((c) => !needle || `${c.name} ${c.goal}`.toLowerCase().includes(needle));
+  }, [clients, query]);
+
+  const points = useMemo(() => chart.map((p) => ({ x: p.day, y: p.y, label: `Nov ${p.day}` })), [chart]);
+
+  const pick = (id) => {
+    setClientId(id);
+    setForm(EMPTY_FORM);
+    setBmiTouched(false);
+    setMessage(null);
+  };
+
+  const change = (key) => (event) => {
+    const value = event.target.value;
+    setMessage(null);
+    setForm((f) => {
+      const next = { ...f, [key]: value };
+      // BMI follows weight while the trainer hasn't typed their own.
+      if (key === "weight" && !bmiTouched && client.heightM && Number(value) > 0) {
+        next.bmi = (Number(value) / client.heightM ** 2).toFixed(1);
+      }
+      return next;
+    });
+    if (key === "bmi") setBmiTouched(true);
+  };
+
+  const submit = (event) => {
+    event.preventDefault();
+    const nums = ["weight", "fat", "muscle", "bmi"].map((k) => Number(form[k]));
+    if (nums.some((n, i) => !form[["weight", "fat", "muscle", "bmi"][i]] || !Number.isFinite(n) || n <= 0)) {
+      return setMessage({ tone: "error", text: "Enter weight, body fat, muscle mass and BMI as positive numbers." });
+    }
+    if (nums[1] > 60) return setMessage({ tone: "error", text: "Body fat should be a percentage under 60." });
+
+    const now = new Date();
+    const date = `${MONTH_NAMES[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+    const inChart = now.getFullYear() === CHART_YEAR && now.getMonth() === CHART_MONTH;
+    saveMetric(clientId, {
+      day: inChart ? now.getDate() : -1,
+      muscle: form.muscle,
+      row: { date, weight: form.weight, fat: form.fat, muscle: form.muscle, bmi: form.bmi, note: form.notes.trim() || "—" },
+    });
+    setForm(EMPTY_FORM);
+    setBmiTouched(false);
+    setMessage({
+      tone: "success",
+      text: `Saved for ${client.name}${inChart ? "" : " (the chart only shows November 2026)"}. Kept in this browser session only (no backend yet).`,
+    });
+  };
+
+  return (
+    <TrainerShell
+      breadcrumb="Body Metrics"
+      title="Body Metrics"
+      subtitle="Track measurements and progress for each client."
+    >
+      <div className="grid gap-[10px] pt-[13px] lg:grid-cols-[231px_minmax(0,1fr)] lg:gap-x-[16px]">
+        {/* ---- My clients ---- */}
+        <Card className="flex flex-col px-5 pb-5 pt-[18px] lg:h-[390px]" delay={60}>
+          <h2 className="text-[19px] font-semibold leading-7">My clients</h2>
+          <SearchInput value={query} onChange={setQuery} placeholder="Search clients by name…" label="Search clients" className="mt-3" />
+          <p className="mt-[19px] border-b border-[#374658] pb-[9px] text-[10px] font-semibold leading-[15px] text-[#afbdcf]">CLIENT / GOAL</p>
+          <ul className="min-h-0 flex-1 overflow-y-auto">
+            {shownClients.map((c) => (
+              <li key={c.id} className="border-b border-[#374658]">
+                <button
+                  type="button"
+                  aria-pressed={c.id === clientId}
+                  onClick={() => pick(c.id)}
+                  className={cx(
+                    "-mx-1 block w-[calc(100%+8px)] rounded-[10px] px-1 py-[8px] text-left transition duration-200 focus-visible:ring-2 focus-visible:ring-[#3b82f6]/70 focus-visible:outline-none",
+                    c.id === clientId ? "bg-[#243e63]/30" : "hover:bg-white/[0.04]",
+                  )}
+                >
+                  <span className="block text-[13px] font-medium leading-[19px]">{c.name}</span>
+                  <span className="block text-[10px] leading-[15px] text-[#afbdcf]">{c.goal}</span>
+                </button>
+              </li>
+            ))}
+            {shownClients.length === 0 && <li className="pt-3 text-xs text-[#afbdcf]">No clients match.</li>}
+          </ul>
+          <div className="flex items-center justify-between gap-2 pt-3 text-[11px] leading-4">
+            <span className="text-[#afbdcf]">
+              {shownClients.length === clients.length ? `Showing all ${clients.length} assigned clients` : `Showing ${shownClients.length} of ${clients.length}`}
+            </span>
+          </div>
+        </Card>
+
+        {/* ---- Right column ---- */}
+        <div className="flex min-w-0 flex-col gap-[10px]">
+          <Card className={cx(tile, "flex flex-wrap items-center justify-between gap-3 px-[17px] py-[14px] lg:min-h-[106px]")} delay={100}>
+            <div key={client.id} className="animate-fade-in">
+              <h2 className="text-[25px] font-bold leading-[31px] text-[#3b82f6]">{lastFirst(client.name)}</h2>
+              <p className="mt-1 text-base text-white/50">
+                Height: {client.heightM ? `${client.heightM}m` : "—"} | Target: {client.targetKg ? `${client.targetKg}kg` : "—"} | Last Update: {latest ? latest.date : "none yet"}
+              </p>
+            </div>
+            <div className="flex gap-2 text-[11px] font-semibold">
+              <Link to="/trainer/workout-plans" className="rounded-full bg-[#2c3a4d] px-4 py-2 text-[#f8fafc] transition hover:bg-[#364860]">Workout plan</Link>
+              <Link to="/trainer/diet-plans" className="rounded-full bg-[#2c3a4d] px-4 py-2 text-[#f8fafc] transition hover:bg-[#364860]">Diet plan</Link>
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-[10px] lg:grid-cols-[179fr_187fr_187fr_187fr] lg:gap-3">
+            <StatTile label="Current Weight" value={latest ? Number(latest.weight) : null} unit="kg" />
+            <StatTile label="Body fat %" value={latest ? Number(latest.fat) : null} unit="%" />
+            <StatTile label="Muscle mass" value={latest ? Number(latest.muscle) : null} unit="kg" />
+            <StatTile label="BMI Index" value={latest ? Number(latest.bmi) : null} />
+          </div>
+
+          <div className="grid gap-[10px] lg:grid-cols-[minmax(0,1fr)_318px] lg:gap-3">
+            {/* chart */}
+            <Card className="relative rounded-[25px] border border-[#1d3557]/70 bg-gradient-to-b from-[#0d1b30] to-[#091322] px-4 pb-3 pt-[14px] shadow-[0_0_30px_-10px_rgba(59,130,246,0.5)] lg:min-h-[233px]" delay={200}>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="flex items-center gap-2 text-sm font-bold">
+                  <TrendingUp className="size-5 text-[#3b82f6]" strokeWidth={2} aria-hidden="true" />
+                  <span>
+                    Muscle Gain <span className="text-[#3b82f6]">Progress</span>
+                  </span>
+                </h2>
+                <SelectInput
+                  label="Month"
+                  value={month}
+                  onChange={setMonth}
+                  options={["November 2026"]}
+                  className="!h-6 !w-[118px] !justify-center !rounded-full border border-[#2c3a4d] !bg-transparent !px-2 !text-[9px]"
+                />
+              </div>
+              {points.length ? (
+                <div className="mt-[6px]">
+                  <AnimatedLineChart
+                    points={points}
+                    xTicks={X_TICKS}
+                    yLabel="Muscle mass (kg)"
+                    unit="kg"
+                    ariaLabel={`Muscle mass for ${client.name} in ${month}`}
+                    replayKey={`${clientId}-${points.length}`}
+                  />
+                </div>
+              ) : (
+                <div className="grid h-[170px] place-items-center text-center text-xs text-[#afbdcf]">
+                  <p className="animate-fade-up">No measurements yet.<br />Save the first update to start the chart.</p>
+                </div>
+              )}
+            </Card>
+
+            {/* form */}
+            <Card as="form" onSubmit={submit} noValidate className={cx(tile, "px-6 pb-4 pt-[14px] lg:min-h-[233px]")} delay={260}>
+              <h2 className="text-lg font-bold leading-[22px]">Client Body Metrics</h2>
+              <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-[3px] px-[2px]">
+                {[
+                  ["weight", "Weight (kg)"],
+                  ["fat", "Body fat (%)"],
+                  ["muscle", "Muscle mass (kg)"],
+                  ["bmi", "BMI"],
+                ].map(([key, label]) => (
+                  <label key={key} className="block text-xs leading-[14px] text-white/50">
+                    {label}
+                    <input inputMode="decimal" value={form[key]} onChange={change(key)} className={cx(field, "mt-[2px]")} />
+                  </label>
+                ))}
+                <label className="col-span-2 block text-xs leading-[14px] text-white/50">
+                  Trainer notes
+                  <input value={form.notes} onChange={change("notes")} className={cx(field, "mt-[2px]")} />
+                </label>
+              </div>
+              <Button type="submit" variant="primary" className="mx-auto mt-3 !h-[26px] !rounded-[8px] px-0 w-[158px] !text-xs">
+                Save Metric Update
+              </Button>
+            </Card>
+          </div>
+          {message && <Notice tone={message.tone}>{message.text}</Notice>}
+
+          {/* history */}
+          <Card className={cx(tile, "px-[25px] pb-5 pt-[14px] lg:min-h-[240px]")} delay={320}>
+            <h2 className="text-xs font-bold">Measurement History</h2>
+            <div className="mt-[14px] overflow-x-auto">
+              <div className="min-w-[640px]">
+                <div className={cx(COLS, "h-7 rounded-[4px] bg-[#17212f] px-[9px] text-xs font-bold")}>
+                  {["DATE", "WEIGHT", "BODY FAT", "MUSCLE", "BMI", "TRAINER NOTE"].map((h) => (
+                    <span key={h}>{h}</span>
+                  ))}
+                </div>
+                <ul className="max-h-[190px] overflow-y-auto">
+                  {history.map((row, index) => (
+                    <li
+                      key={row.id}
+                      className={cx(COLS, "animate-fade-up h-[30px] px-[9px] text-[10px] tabular-nums transition-colors hover:bg-white/[0.04]")}
+                      style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
+                    >
+                      <span>{row.date}</span>
+                      <span>{row.weight}kg</span>
+                      <span>{row.fat}%</span>
+                      <span>{row.muscle}kg</span>
+                      <span>{row.bmi}</span>
+                      <span className="truncate" title={row.note}>{row.note}</span>
+                    </li>
+                  ))}
+                  {history.length === 0 && <li className="px-[9px] pt-4 text-xs text-[#afbdcf]">No measurements recorded for {client.name} yet.</li>}
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </TrainerShell>
+  );
+}
+</file>
+
+<file path="src/pages/Trainer/TrainerDashboard.jsx">
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import TrainerShell from "../../components/TrainerShell";
+import { CountUp, Pill } from "../../components/trainer/TrainerUI";
+import { useAuth } from "../../context/AuthContext";
+import { trainerDashboardSample } from "../../data/trainerDashboard";
+import { useTrainerStore } from "../../data/trainerStore";
+
+// Trainer Dashboard  ->  route: /trainer/dashboard
+// Figma frame "Trainer / Dashboard" (94:17), 1279 x 900.
+//
+// <TrainerDashboard />                 shows the Figma sample content
+// <TrainerDashboard data={apiData} />  same shape as data/trainerDashboard.js
+
+const FILTERS = [
+  { value: "all", label: "All clients" },
+  { value: "needs-diet", label: "Needs a diet plan" },
+  { value: "needs-workout", label: "Needs a workout plan" },
+];
+
+const matchesFilter = {
+  all: () => true,
+  "needs-diet": (client) => client.diet === "not-set",
+  "needs-workout": (client) => client.workout === "not-set",
+};
+
+const card = "animate-fade-up overflow-hidden rounded-[18px] bg-[#1f2937]";
+
+function PlanPill({ status }) {
+  return <Pill tone={status === "active" ? "success" : "warn"} className="w-[69px]">{status === "active" ? "Active" : "Not set"}</Pill>;
+}
+
+function StatCard({ stat, index }) {
+  return (
+    <div
+      className={`${card} h-24 px-[18px] pt-[13px]`}
+      style={{ animationDelay: `${200 + index * 70}ms` }}
+    >
+      <p className="text-xs font-medium leading-[17px] text-[#afbdcf]">{stat.label}</p>
+      <div className="mt-1 grid grid-cols-[minmax(45px,auto)_1fr] items-end">
+        <span className="text-[28px] font-semibold leading-[41px] tabular-nums text-[#f8fafc]"><CountUp key={stat.value} value={stat.value} /></span>
+        <span
+          className={`whitespace-nowrap pb-1 text-[10px] leading-[15px] ${
+            stat.tone === "warn" ? "text-[#f8cf7d]" : "text-[#afbdcf]"
+          }`}
+        >
+          {stat.note}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export default function TrainerDashboard({ data: baseData = trainerDashboardSample }) {
+  const { user } = useAuth();
+  const store = useTrainerStore();
+
+  // Live numbers come from the shared trainer store, so assigning a plan or
+  // approving a request on another page updates this dashboard too.
+  const data = useMemo(() => {
+    const clients = store.clients.map((c) => ({ ...c, id: c.id }));
+    const pending = store.requests.filter((r) => r.status === "pending").length;
+    const workouts = clients.filter((c) => c.workout === "active").length;
+    const diets = clients.filter((c) => c.diet === "active").length;
+    const needsDiet = clients.find((c) => c.diet === "not-set");
+    const needsWorkout = clients.find((c) => c.workout === "not-set");
+    const todo = needsDiet
+      ? { title: `Complete ${needsDiet.name.split(" ")[0]}’s nutrition plan`, text: "Add a diet plan before the next session.", cta: "Create diet plan", to: "/trainer/diet-plans", checkIn: `Next check-in: ${needsDiet.nextSession}` }
+      : needsWorkout
+        ? { title: `Complete ${needsWorkout.name.split(" ")[0]}’s workout plan`, text: "Add a workout plan before the next session.", cta: "Create workout plan", to: "/trainer/workout-plans", checkIn: `Next check-in: ${needsWorkout.nextSession}` }
+        : null;
+    return {
+      ...baseData,
+      clients,
+      stats: [
+        { ...baseData.stats[0], value: clients.length },
+        baseData.stats[1],
+        { ...baseData.stats[2], value: pending },
+        { ...baseData.stats[3], value: workouts + diets, note: `${workouts} workout · ${diets} diet` },
+      ],
+      attention: todo ? { ...baseData.attention, ...todo, count: 1 } : { count: 0, title: "You’re all caught up", text: "Every client has a workout and a diet plan.", cta: "View plans", to: "/trainer/workout-plans", checkIn: "" },
+      requests: { ...baseData.requests, count: pending, text: pending ? baseData.requests.text : "No requests waiting for you." },
+    };
+  }, [baseData, store]);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
+
+  // Signed-in trainer's name if there is one, otherwise the sample/data name.
+  const trainerName = user?.fullName || data.trainer.name;
+  const firstName = trainerName.split(" ")[0];
+
+  const visibleClients = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return data.clients.filter(
+      (client) =>
+        matchesFilter[filter](client) &&
+        (!needle || client.name.toLowerCase().includes(needle) || client.goal.toLowerCase().includes(needle)),
+    );
+  }, [data.clients, query, filter]);
+
+  const total = data.clients.length;
+  const filterLabel = FILTERS.find((item) => item.value === filter).label;
+
+  return (
+    <TrainerShell
+      breadcrumb="Dashboard"
+      title={`Welcome, ${firstName}!`}
+      subtitle="Your clients, sessions, and coaching priorities in one place."
+      trainerName={trainerName}
+      trainerRole={data.trainer.role}
+    >
+      {/* ---- Stat cards ---- */}
+      <div className="grid grid-cols-1 gap-[18px] min-[520px]:grid-cols-2 lg:grid-cols-4">
+        {data.stats.map((stat, index) => (
+          <StatCard key={stat.label} stat={stat} index={index} />
+        ))}
+      </div>
+
+      <div className="mt-[18px] grid gap-[18px] lg:grid-cols-[minmax(0,1fr)_350px]">
+        <div className="flex min-w-0 flex-col gap-[18px]">
+          {/* ---- My clients ---- */}
+          <section className={`${card} px-5 pb-[17px] pt-[18px]`} style={{ animationDelay: "480ms" }}>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-[19px] font-semibold leading-7">My clients</h2>
+              <span className="text-[11px] leading-4 text-[#afbdcf] sm:mr-[39px]">
+                {total} {total === 1 ? "client" : "clients"}
+              </span>
+            </div>
+
+            <div className="mt-3 flex flex-col gap-[15px] text-xs sm:flex-row sm:items-center">
+              <label className="relative block flex-1">
+                <span className="sr-only">Search clients by name</span>
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search clients by name…"
+                  className="h-9 w-full rounded-[9px] bg-[#17212f] px-[13px] text-xs text-[#f8fafc] outline-none transition-shadow placeholder:text-[#afbdcf] focus:ring-2 focus:ring-[#3b82f6]/70"
+                />
+              </label>
+
+              <div className="relative h-[34px] shrink-0 rounded-[17px] bg-[#2c3a4d] text-xs font-semibold transition-colors focus-within:ring-2 focus-within:ring-[#3b82f6]/70 hover:bg-[#33445a] sm:w-[209px]">
+                <span className="flex h-full items-center justify-center whitespace-pre" aria-hidden="true">
+                  {filterLabel}
+                  {"  ▾"}
+                </span>
+                <select
+                  aria-label="Filter clients"
+                  value={filter}
+                  onChange={(event) => setFilter(event.target.value)}
+                  className="absolute inset-0 size-full cursor-pointer rounded-[17px] opacity-0"
+                >
+                  {FILTERS.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-[19px] overflow-x-auto">
+              <table className="w-full min-w-[580px] table-fixed border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-[#374658] text-[10px] font-semibold leading-[15px] text-[#afbdcf]">
+                    <th scope="col" className="w-[41.8%] pb-[10px] font-semibold">CLIENT / GOAL</th>
+                    <th scope="col" className="w-[20.1%] pb-[10px] font-semibold">WORKOUT</th>
+                    <th scope="col" className="w-[17.7%] pb-[10px] font-semibold">DIET</th>
+                    <th scope="col" className="pb-[10px] font-semibold">NEXT SESSION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleClients.map((client) => (
+                    <tr
+                      key={client.id}
+                      className="h-12 border-b border-[#374658] align-middle transition-colors first:h-[54px] last:border-b-0 hover:bg-white/[0.03] [&:first-child>td]:pt-[6px]"
+                    >
+                      <td>
+                        <p className="text-[13px] font-medium leading-[19px] text-[#f8fafc]">{client.name}</p>
+                        <p className="text-[10px] leading-[15px] text-[#afbdcf]">{client.goal}</p>
+                      </td>
+                      <td><PlanPill status={client.workout} /></td>
+                      <td><PlanPill status={client.diet} /></td>
+                      <td className="text-[10px] leading-[15px] text-[#afbdcf]">{client.nextSession}</td>
+                    </tr>
+                  ))}
+                  {visibleClients.length === 0 && (
+                    <tr className="h-12">
+                      <td colSpan={4} className="pt-3 text-xs text-[#afbdcf]">
+                        No clients match your search.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-5 flex items-center justify-between gap-3 text-[11px] leading-4">
+              <p className="text-[#afbdcf]">
+                {visibleClients.length === total
+                  ? `Showing all ${total} assigned clients`
+                  : `Showing ${visibleClients.length} of ${total} assigned clients`}
+              </p>
+              <Link
+                to="/trainer/workout-plans"
+                className="mr-[37px] font-semibold text-[#8cbaff] transition-colors hover:text-[#b3d1ff] max-sm:mr-0"
+              >
+                Manage plans →
+              </Link>
+            </div>
+          </section>
+
+          {/* ---- Needs your attention ---- */}
+          <section className={`${card} px-5 pb-[25px] pt-[18px]`} style={{ animationDelay: "560ms" }}>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold leading-[26px]">Needs your attention</h2>
+              <span className="inline-flex h-6 w-[87px] items-center justify-center rounded-xl bg-[#453923] text-[10px] font-medium text-[#f8cf7d]">
+                {data.attention.count} {data.attention.count === 1 ? "action" : "actions"}
+              </span>
+            </div>
+            <p className="mt-4 text-sm font-medium leading-5">{data.attention.title}</p>
+            <p className="mt-[6px] text-xs leading-[17px] text-[#afbdcf]">{data.attention.text}</p>
+            <div className="mt-[19px] flex flex-wrap items-center justify-between gap-3">
+              <Link
+                to={data.attention.to}
+                className="inline-flex h-[34px] w-[153px] items-center justify-center rounded-[17px] bg-[#3b82f6] text-xs font-semibold text-[#f8fafc] transition hover:bg-[#5b9bf8] active:scale-[0.98]"
+              >
+                {data.attention.cta}
+              </Link>
+              <span className="text-[11px] leading-4 text-[#afbdcf] sm:mr-[82px]">{data.attention.checkIn}</span>
+            </div>
+          </section>
+        </div>
+
+        {/* ---- Today's sessions ---- */}
+        <section className={`${card} flex flex-col px-5 pb-[26px] pt-[18px]`} style={{ animationDelay: "520ms" }}>
+          <h2 className="text-lg font-semibold leading-[26px]">Today’s sessions</h2>
+          <p className="mt-[5px] text-[11px] leading-4 text-[#afbdcf]">{data.sessionsDate}</p>
+          <hr className="mt-[14px] border-0 border-t border-[#374658]" />
+
+          <ul className="mt-[20px] flex flex-col gap-4">
+            {data.sessions.map((session) => (
+              <li key={session.id}>
+                <Link
+                  to="/trainer/schedule"
+                  className="relative block h-24 rounded-xl bg-[#17212f] px-[15px] pt-3 transition-colors hover:bg-[#1b2a3c]"
+                >
+                  <span className="absolute left-0 top-[15px] h-[66px] w-[3px] rounded-[2px] bg-[#3b82f6]" aria-hidden="true" />
+                  <span className="block text-[11px] font-semibold leading-4 text-[#8cbaff]">{session.time}</span>
+                  <span className="mt-[6px] block text-sm font-semibold leading-5 text-[#f8fafc]">{session.client}</span>
+                  <span className="mt-[6px] block text-[11px] leading-4 text-[#afbdcf]">{session.detail}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-auto pt-7">
+            <hr className="border-0 border-t border-[#374658]" />
+            <p className="mt-[18px] text-sm font-semibold leading-5">
+              {data.requests.count} rescheduling {data.requests.count === 1 ? "request" : "requests"}
+            </p>
+            <p className="mt-1 text-[11px] leading-4 text-[#afbdcf]">{data.requests.text}</p>
+            <Link
+              to={data.requests.to}
+              className="mt-5 flex h-[34px] w-full items-center justify-center rounded-[17px] bg-[#3b82f6] text-xs font-semibold text-[#f8fafc] transition hover:bg-[#5b9bf8] active:scale-[0.98]"
+            >
+              Review requests
+            </Link>
+          </div>
+        </section>
+      </div>
+    </TrainerShell>
+  );
+}
+</file>
+
+<file path="src/pages/Trainer/TrainerDietPlans.jsx">
+import { useMemo, useState } from "react";
+import TrainerShell from "../../components/TrainerShell";
+import PlanLibrary from "../../components/trainer/PlanLibrary";
+import PlanEditorFrame from "../../components/trainer/PlanEditorFrame";
+import { Label, SelectInput, TextButton, TextInput, cx } from "../../components/trainer/TrainerUI";
+import { dietDraftSeed, saveDietPlan, useTrainerStore } from "../../data/trainerStore";
+import { GOALS } from "./TrainerWorkoutPlans";
+
+// Diet plans  ->  route: /trainer/diet-plans
+// Figma frame "Trainer/diet-plan" (94:85), 1279 x 900.
+
+const DURATIONS = ["2 weeks", "4 weeks", "6 weeks", "8 weeks", "12 weeks"];
+const PREFERENCES = ["No restrictions", "Vegetarian", "Vegan", "Pescatarian", "Gluten-free", "Dairy-free"];
+
+const COLUMNS = "grid grid-cols-[130px_minmax(0,1fr)_72px_24px] items-center gap-x-5";
+const bare =
+  "min-w-0 rounded-[5px] bg-transparent outline-none transition placeholder:text-[#afbdcf] hover:bg-[#17212f]/70 focus:bg-[#17212f] focus:px-2 focus:ring-2 focus:ring-[#3b82f6]/70";
+
+const blankFromPlan = (plan) => ({
+  ...dietDraftSeed,
+  planId: plan.id,
+  basedOn: plan.id,
+  name: plan.name,
+  clientId: plan.clientId,
+  attachment: "",
+  macros: { kcal: "", protein: "", carbs: "", fats: "" },
+  meals: [],
+});
+
+let mealSeq = 0;
+
+function MacroTile({ label, value, unit, accent, onChange, readOnly }) {
+  return (
+    <label className="block h-[65px] rounded-[10px] bg-[#17212f] px-3 pt-[9px] transition focus-within:ring-2 focus-within:ring-[#3b82f6]/70 hover:bg-[#1a2636]">
+      <span className="block text-[10px] leading-[15px] text-[#afbdcf]">{label}</span>
+      <span className="mt-[5px] flex items-baseline gap-[5px]">
+        <input
+          inputMode="numeric"
+          aria-label={label}
+          readOnly={readOnly}
+          value={value}
+          onChange={(e) => onChange?.(e.target.value.replace(/[^\d,]/g, ""))}
+          className={cx(
+            "min-w-0 bg-transparent p-0 text-lg font-semibold leading-[26px] outline-none",
+            accent ? "text-[#8cbaff]" : "text-[#f8fafc]",
+            readOnly && "cursor-default",
+          )}
+          style={{ width: `${Math.max(String(value).length, 1) + 0.3}ch` }}
+        />
+        <span className={cx("text-lg font-semibold leading-[26px]", accent ? "text-[#8cbaff]" : "text-[#f8fafc]")}>{unit}</span>
+      </span>
+    </label>
+  );
+}
+
+export default function TrainerDietPlans() {
+  const { clients, dietPlans } = useTrainerStore();
+  const [draft, setDraft] = useState(dietDraftSeed);
+  const [message, setMessage] = useState(null);
+
+  const clientName = (id) => clients.find((c) => c.id === id)?.name ?? "Unassigned";
+  const patch = (changes) => {
+    setMessage(null);
+    setDraft((d) => ({ ...d, ...changes }));
+  };
+  const setMeals = (meals) => patch({ meals });
+  const editMeal = (id, key, value) => setMeals(draft.meals.map((m) => (m.id === id ? { ...m, [key]: value } : m)));
+
+  // Daily energy is the sum of the meals, so the tile always matches the table.
+  const totalKcal = draft.meals.reduce((sum, m) => sum + (Number(String(m.kcal).replace(/,/g, "")) || 0), 0);
+
+  const library = useMemo(
+    () =>
+      dietPlans.map((plan) => ({
+        id: plan.id,
+        name: plan.name,
+        subtitle: `${clientName(plan.clientId)} · ${plan.status === "draft" ? "Draft" : "Assigned"}`,
+        tone: plan.status === "draft" ? "warn" : undefined,
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dietPlans, clients],
+  );
+
+  const assigned = dietPlans.filter((p) => p.status === "assigned").length;
+  const drafts = dietPlans.filter((p) => p.status === "draft").length + (draft.planId ? 0 : 1);
+  const statusLabel = dietPlans.find((p) => p.id === draft.planId)?.status === "assigned" ? "ASSIGNED" : "DRAFT";
+
+  const loadPlan = (id) => {
+    const plan = dietPlans.find((p) => p.id === id);
+    if (!plan) return;
+    setMessage(null);
+    setDraft(plan.data ?? (id === "d4" ? dietDraftSeed : blankFromPlan(plan)));
+  };
+
+  const startFresh = () => {
+    setMessage(null);
+    setDraft({ ...blankFromPlan({ id: null, name: "", clientId: "" }), planId: null, basedOn: null });
+  };
+
+  const commit = (status) => {
+    if (!draft.name.trim()) return setMessage({ tone: "error", text: "Give the plan a name first." });
+    if (status === "assigned") {
+      if (!draft.clientId) return setMessage({ tone: "error", text: "Choose a client to assign this plan to." });
+      if (!draft.meals.some((m) => m.food.trim())) return setMessage({ tone: "error", text: "Add at least one meal before assigning." });
+    }
+    const id = saveDietPlan({ ...draft, macros: { ...draft.macros, kcal: totalKcal.toLocaleString("en-US") } }, status);
+    setDraft((d) => ({ ...d, planId: id }));
+    setMessage({
+      tone: "success",
+      text:
+        status === "assigned"
+          ? `Assigned to ${clientName(draft.clientId)}. Saved in this browser session only (no backend yet).`
+          : "Draft saved in this browser session only (no backend yet).",
+    });
+  };
+
+  return (
+    <TrainerShell
+      breadcrumb="Diet plans"
+      title="Diet plans"
+      subtitle="Create balanced meal plans tailored to each client’s goals."
+    >
+      <div className="grid gap-[18px] lg:grid-cols-[300px_minmax(0,1fr)]">
+        <PlanLibrary
+          title="Diet library"
+          summary={`${assigned} assigned plans · ${drafts} draft`}
+          plans={library}
+          selectedId={draft.planId ?? draft.basedOn}
+          onSelect={loadPlan}
+          fileName={draft.attachment}
+          onFile={(attachment) => patch({ attachment })}
+          footer={
+            <>
+              Keep nutrition and training in sync.{" "}
+              <button type="button" onClick={startFresh} className="font-semibold text-[#8cbaff] underline-offset-2 hover:underline">
+                Start fresh
+              </button>
+            </>
+          }
+        />
+
+        <PlanEditorFrame
+          title="Create diet plan"
+          statusLabel={statusLabel}
+          onSaveDraft={() => commit("draft")}
+          startDate={draft.startDate}
+          onStartDate={(startDate) => patch({ startDate })}
+          assignLabel="Assign diet plan"
+          onAssign={() => commit("assigned")}
+          message={message}
+        >
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_240px]">
+            <div>
+              <Label htmlFor="dp-name">Plan name</Label>
+              <TextInput id="dp-name" value={draft.name} onChange={(e) => patch({ name: e.target.value })} placeholder="e.g. Balanced daily nutrition" />
+            </div>
+            <div>
+              <Label htmlFor="dp-client">Assign to client</Label>
+              <SelectInput
+                id="dp-client"
+                label="Assign to client"
+                value={draft.clientId}
+                onChange={(clientId) => {
+                  const goal = clients.find((c) => c.id === clientId)?.goal;
+                  patch({ clientId, ...(GOALS.includes(goal) ? { goal } : {}) });
+                }}
+                options={clients.map((c) => ({ value: c.id, label: c.name }))}
+              />
+            </div>
+          </div>
+
+          <div className="mt-[15px] grid gap-4 sm:grid-cols-[214fr_204fr_214fr]">
+            <div>
+              <Label htmlFor="dp-goal">Goal</Label>
+              <SelectInput id="dp-goal" label="Goal" value={draft.goal} onChange={(goal) => patch({ goal })} options={GOALS} />
+            </div>
+            <div>
+              <Label htmlFor="dp-duration">Duration</Label>
+              <SelectInput id="dp-duration" label="Duration" value={draft.duration} onChange={(duration) => patch({ duration })} options={DURATIONS} />
+            </div>
+            <div>
+              <Label htmlFor="dp-pref">Dietary preferences</Label>
+              <SelectInput id="dp-pref" label="Dietary preferences" value={draft.preference} onChange={(preference) => patch({ preference })} options={PREFERENCES} />
+            </div>
+          </div>
+
+          <div className="mt-[19px] grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-4 lg:gap-[16px]">
+            <MacroTile label="Daily energy" value={totalKcal.toLocaleString("en-US")} unit="kcal" accent readOnly />
+            {[
+              ["protein", "Protein"],
+              ["carbs", "Carbs"],
+              ["fats", "Fats"],
+            ].map(([key, label]) => (
+              <MacroTile key={key} label={label} unit="g" value={draft.macros[key]} onChange={(v) => patch({ macros: { ...draft.macros, [key]: v } })} />
+            ))}
+          </div>
+
+          <h3 className="mt-[16px] text-[15px] font-semibold leading-[22px]">Daily meal schedule</h3>
+          <div className="mt-[10px] overflow-x-auto">
+            <div className="min-w-[560px]">
+              <div className={cx(COLUMNS, "pb-[10px] text-[10px] font-semibold leading-[15px] text-[#afbdcf]")}>
+                <span>MEAL / TIME</span>
+                <span>FOODS &amp; PORTIONS</span>
+                <span>ENERGY</span>
+                <span />
+              </div>
+              <div className="border-t border-[#374658]">
+                {draft.meals.map((meal, index) => (
+                  <div
+                    key={meal.id}
+                    className={cx(COLUMNS, "animate-fade-up border-b border-[#374658] py-[5px]")}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div>
+                      <input aria-label="Meal name" value={meal.name} onChange={(e) => editMeal(meal.id, "name", e.target.value)} placeholder="Meal" className={cx(bare, "block h-[19px] w-full text-xs font-medium text-[#f8fafc]")} />
+                      <input aria-label="Meal time" value={meal.time} onChange={(e) => editMeal(meal.id, "time", e.target.value)} placeholder="Time" className={cx(bare, "block h-[15px] w-full text-[10px] text-[#afbdcf]")} />
+                    </div>
+                    <div>
+                      <input aria-label="Food" value={meal.food} onChange={(e) => editMeal(meal.id, "food", e.target.value)} placeholder="Foods" className={cx(bare, "block h-[19px] w-full text-xs font-medium text-[#f8fafc]")} />
+                      <input aria-label="Portions" value={meal.portion} onChange={(e) => editMeal(meal.id, "portion", e.target.value)} placeholder="Portions" className={cx(bare, "block h-[15px] w-full text-[9px] text-[#afbdcf]")} />
+                    </div>
+                    <span className="flex items-center text-[11px] text-[#f8fafc]">
+                      <input
+                        aria-label="Energy in kcal"
+                        inputMode="numeric"
+                        value={meal.kcal}
+                        onChange={(e) => editMeal(meal.id, "kcal", e.target.value.replace(/\D/g, ""))}
+                        className={cx(bare, "h-5 w-[4ch] text-right text-[11px] text-[#f8fafc]")}
+                      />
+                      <span className="ml-1 shrink-0">kcal</span>
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${meal.name || "meal"}`}
+                      onClick={() => setMeals(draft.meals.filter((m) => m.id !== meal.id))}
+                      className="size-6 rounded text-base leading-none text-[#afbdcf] transition hover:text-[#f4a3b5] focus-visible:ring-2 focus-visible:ring-[#3b82f6]/70 focus-visible:outline-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {draft.meals.length === 0 && <p className="border-b border-[#374658] py-[15px] text-xs text-[#afbdcf]">No meals yet.</p>}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-[11px] flex flex-wrap items-center justify-between gap-3">
+            <TextButton onClick={() => setMeals([...draft.meals, { id: `nm${++mealSeq}`, name: "", time: "", food: "", portion: "", kcal: "" }])}>
+              + Add meal
+            </TextButton>
+            <label className="flex items-center gap-1 text-xs text-[#afbdcf]">
+              Daily water goal:
+              <input
+                inputMode="decimal"
+                aria-label="Daily water goal in litres"
+                value={draft.waterL}
+                onChange={(e) => patch({ waterL: e.target.value.replace(/[^\d.]/g, "") })}
+                className="w-[3.2ch] rounded bg-transparent text-right text-xs text-[#afbdcf] outline-none focus:bg-[#17212f] focus:ring-2 focus:ring-[#3b82f6]/70"
+              />
+              L
+            </label>
+          </div>
+        </PlanEditorFrame>
+      </div>
+    </TrainerShell>
+  );
+}
+</file>
+
+<file path="src/pages/Trainer/TrainerRescheduling.jsx">
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import TrainerShell from "../../components/TrainerShell";
+import { Button, Card, Divider, Notice, Pill, SearchInput, SelectInput, TextArea, cx } from "../../components/trainer/TrainerUI";
+import { formatDay, formatRange, formatShort, resolveRequest, useTrainerStore } from "../../data/trainerStore";
+
+// Rescheduling  ->  route: /trainer/rescheduling
+// Figma frame "Trainer / Rescheduling" (94:119), 1279 x 900.
+
+const SORTS = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+];
+
+const received = (min) => (min < 60 ? `${min} min ago` : min < 120 ? "1 hour ago" : `${Math.round(min / 60)} hours ago`);
+const STATUS = {
+  approved: { tone: "success", label: "Approved" },
+  declined: { tone: "danger", label: "Declined" },
+  suggested: { tone: "info", label: "Time suggested" },
+};
+
+function SessionBox({ label, iso, minutes, requested }) {
+  return (
+    <div className={cx("rounded-xl px-[15px] pb-[14px] pt-[13px] transition-colors", requested ? "bg-[#20395a]" : "bg-[#17212f]")}>
+      <p className={cx("text-[10px] font-semibold leading-[15px]", requested ? "text-[#a8ceff]" : "text-[#afbdcf]")}>{label}</p>
+      <p className="mt-[10px] text-sm font-medium leading-5">{formatDay(iso)}</p>
+      <p className={cx("mt-[10px] text-[13px] leading-[19px]", requested ? "text-[#a8ceff]" : "text-[#afbdcf]")}>{formatRange(iso, minutes)}</p>
+    </div>
+  );
+}
+
+function RequestCard({ request, name, selected, onSelect, index }) {
+  const status = STATUS[request.status];
+  return (
+    <li className="animate-fade-up" style={{ animationDelay: `${index * 70}ms` }}>
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={selected}
+        className={cx(
+          "block h-[140px] w-full rounded-xl border px-[14px] pt-[11px] text-left transition duration-200 focus-visible:ring-2 focus-visible:ring-[#3b82f6]/70 focus-visible:outline-none",
+          selected ? "border-[#3b82f6] bg-[#263d5c]" : "border-transparent bg-[#17212f] hover:-translate-y-px hover:bg-[#1b2a3c]",
+        )}
+      >
+        <span className="flex items-start justify-between gap-3">
+          <span className="text-sm font-semibold leading-5">{name}</span>
+          <span className={cx("mt-1 text-[10px] font-medium leading-[15px]", status ? "text-[#afbdcf]" : "text-[#f8cf7d]")}>
+            {status ? status.label : "Pending"}
+          </span>
+        </span>
+        <span className="mt-[5px] block text-[11px] leading-4 text-[#afbdcf]">
+          {request.title} · {request.minutes} min
+        </span>
+        <span className="mt-3 grid grid-cols-[48px_1fr] gap-y-[5px] text-[11px] leading-4">
+          <span className="text-[#afbdcf]">From:</span>
+          <span className="text-[#afbdcf]">{formatShort(request.from)}</span>
+          <span className="text-[#afbdcf]">To:</span>
+          <span className="font-medium text-[#9fc8ff]">{formatShort(request.to)}</span>
+        </span>
+        <span className="mt-[13px] block text-[9px] leading-[13px] text-[#afbdcf]">Received {received(request.receivedMin)}</span>
+      </button>
+    </li>
+  );
+}
+
+export default function TrainerRescheduling() {
+  const { clients, requests } = useTrainerStore();
+  const [tab, setTab] = useState("pending");
+  const [sort, setSort] = useState("newest");
+  const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState("r1");
+  const [reply, setReply] = useState("");
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestion, setSuggestion] = useState("");
+  const [result, setResult] = useState("");
+
+  const clientOf = (id) => clients.find((c) => c.id === id);
+  const pending = requests.filter((r) => r.status === "pending");
+  const handled = requests.filter((r) => r.status !== "pending");
+  const source = tab === "pending" ? pending : handled;
+
+  const list = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const rows = source.filter((r) => !needle || `${clientOf(r.clientId)?.name} ${r.title}`.toLowerCase().includes(needle));
+    return rows.sort((a, b) => (sort === "newest" ? a.receivedMin - b.receivedMin : b.receivedMin - a.receivedMin));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, query, sort, clients]);
+
+  const selected = requests.find((r) => r.id === selectedId && source.includes(r)) ?? list[0];
+
+  // Reset the reply box whenever a different request is opened.
+  useEffect(() => {
+    setReply("");
+    setSuggesting(false);
+    setSuggestion(selected?.to ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.id]);
+
+  const respond = (status) => {
+    const client = clientOf(selected.clientId);
+    const next = pending.find((r) => r.id !== selected.id);
+    resolveRequest(selected.id, status, reply.trim(), status === "suggested" ? suggestion : "");
+    setResult(
+      {
+        approved: `Approved. ${client.name}’s next session is now ${formatShort(selected.to)}.`,
+        declined: `Declined. ${client.name} keeps the ${formatShort(selected.from)} session.`,
+        suggested: `Suggested ${formatShort(suggestion)} to ${client.name}.`,
+      }[status] + " Recorded in this session only; nothing was sent to the client (no backend yet).",
+    );
+    if (next) setSelectedId(next.id);
+  };
+
+  const client = selected && clientOf(selected.clientId);
+  const conflictWith = selected && clients.find((c) => c.id !== selected.clientId && c.nextSession === formatShort(selected.to));
+  const open = selected?.status === "pending";
+  const status = selected && STATUS[selected.status];
+
+  return (
+    <TrainerShell
+      breadcrumb="Rescheduling"
+      title="Rescheduling"
+      subtitle="Review requested changes and keep your schedule on track."
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div role="tablist" aria-label="Request status" className="flex gap-2">
+          {[
+            ["pending", "Pending", pending.length, "w-[231px] max-sm:w-auto max-sm:px-6"],
+            ["handled", "Handled", handled.length, "w-[110px]"],
+          ].map(([id, label, count, width]) => (
+            <button
+              key={id}
+              role="tab"
+              type="button"
+              aria-selected={tab === id}
+              onClick={() => {
+                setTab(id);
+                setSelectedId("");
+              }}
+              className={cx(
+                "h-[38px] rounded-[19px] text-xs font-semibold transition duration-200 focus-visible:ring-2 focus-visible:ring-[#3b82f6]/70 focus-visible:outline-none",
+                width,
+                tab === id ? "bg-[#284b7a] text-[#a8ceff]" : "bg-[#1f2937] text-[#afbdcf] hover:bg-[#263548]",
+              )}
+            >
+              {label} <span key={count} className="animate-pop-in inline-block pl-1">{count}</span>
+            </button>
+          ))}
+        </div>
+        <span className="text-[10px] leading-[15px] text-[#afbdcf]">Last updated just now</span>
+      </div>
+
+      <div className="mt-[18px] grid gap-[18px] lg:grid-cols-[390px_minmax(0,1fr)]">
+        {/* ---- Requests ---- */}
+        <Card className="flex flex-col px-5 pb-5 pt-5 lg:h-[647px]" delay={80}>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold leading-[26px]">Requests</h2>
+            <SelectInput
+              label="Sort requests"
+              value={sort}
+              onChange={setSort}
+              options={SORTS}
+              className="!h-6 !bg-transparent !px-1 !text-[10px] text-[#afbdcf] hover:!bg-[#17212f]"
+            />
+          </div>
+          <SearchInput value={query} onChange={setQuery} placeholder="Search client or session…" label="Search requests" className="mt-[17px]" />
+
+          <ul className="mt-[18px] flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-px">
+            {list.map((request, index) => (
+              <RequestCard
+                key={request.id}
+                request={request}
+                index={index}
+                name={clientOf(request.clientId)?.name}
+                selected={request.id === selected?.id}
+                onSelect={() => setSelectedId(request.id)}
+              />
+            ))}
+            {list.length === 0 && (
+              <li className="animate-fade-in rounded-xl bg-[#17212f] p-5 text-xs leading-[18px] text-[#afbdcf]">
+                {query ? `No requests match “${query}”.` : tab === "pending" ? "You’re all caught up. No pending requests." : "Nothing handled yet."}
+              </li>
+            )}
+          </ul>
+          <p className="pt-4 text-[11px] leading-4 text-[#afbdcf]">
+            {tab === "pending" ? `All ${pending.length} pending requests are shown.` : `${handled.length} handled this session.`}
+          </p>
+        </Card>
+
+        {/* ---- Request details ---- */}
+        <Card className="flex flex-col px-6 pb-5 pt-5 lg:h-[647px]" delay={140}>
+          {selected ? (
+            <div key={selected.id} className="animate-fade-in flex min-h-0 flex-1 flex-col">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-[19px] font-semibold leading-7">Request details</h2>
+                <Pill tone={status?.tone ?? "warn"} className="h-[25px] min-w-[124px] rounded-[13px]">
+                  {status ? status.label : "Pending review"}
+                </Pill>
+              </div>
+              <Divider className="mt-4" />
+
+              <h3 className="mt-[17px] text-xl font-semibold leading-[29px]">{client?.name}</h3>
+              <p className="text-xs leading-[17px] text-[#afbdcf]">
+                {selected.title} · {selected.minutes}-minute personal training
+              </p>
+
+              <div className="mt-[26px] grid gap-4 sm:grid-cols-2">
+                <SessionBox label="CURRENT SESSION" iso={selected.from} minutes={selected.minutes} />
+                <SessionBox label="REQUESTED SESSION" iso={selected.to} minutes={selected.minutes} requested />
+              </div>
+
+              <p className="mt-[21px] text-xs font-medium leading-[17px] text-[#afbdcf]">Reason for rescheduling</p>
+              <p className="mt-[10px] text-[13px] leading-[19px]">{selected.reason ? `“${selected.reason}”` : <span className="text-[#afbdcf]">No reason provided.</span>}</p>
+
+              {conflictWith ? (
+                <div className="mt-[18px] rounded-[11px] bg-[#453923] px-4 py-[10px]">
+                  <p className="text-xs font-semibold leading-[17px] text-[#f8cf7d]">Schedule conflict</p>
+                  <p className="mt-[6px] text-[11px] leading-4 text-[#e6d3a6]">
+                    {conflictWith.name} already has a session on {formatShort(selected.to)}.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-[18px] rounded-[11px] bg-[#18352d] px-4 py-[10px]">
+                  <p className="text-xs font-semibold leading-[17px] text-[#8ce3b1]">No schedule conflict</p>
+                  <p className="mt-[6px] text-[11px] leading-4 text-[#b5d8c4]">
+                    You’re available on {formatShort(selected.to).split(",")[0]} from {formatRange(selected.to, selected.minutes)}.
+                  </p>
+                </div>
+              )}
+
+              {suggesting && open && (
+                <div className="animate-pop-in mt-4 flex flex-wrap items-end gap-3 rounded-xl bg-[#17212f] p-3">
+                  <label className="text-[11px] font-medium text-[#afbdcf]">
+                    Suggested time
+                    <input
+                      type="datetime-local"
+                      value={suggestion}
+                      onChange={(e) => setSuggestion(e.target.value)}
+                      className="mt-1 block h-9 rounded-[8px] bg-[#1f2937] px-3 text-xs text-[#f8fafc] outline-none [color-scheme:dark] focus:ring-2 focus:ring-[#3b82f6]/70"
+                    />
+                  </label>
+                  <Button variant="primary" disabled={!suggestion || suggestion === selected.to} onClick={() => respond("suggested")}>
+                    Send suggestion
+                  </Button>
+                </div>
+              )}
+
+              <label className="mt-[19px] block text-[11px] font-medium leading-4 text-[#afbdcf]" htmlFor="rs-reply">
+                {open ? "Reply to client (optional)" : "Your reply"}
+              </label>
+              <TextArea
+                id="rs-reply"
+                rows={2}
+                disabled={!open}
+                value={open ? reply : selected.reply || ""}
+                onChange={(e) => setReply(e.target.value)}
+                placeholder="Add a note about this schedule change…"
+                className="mt-[9px] h-[54px] !rounded-[9px] px-[13px] disabled:opacity-60"
+              />
+
+              <div className="mt-auto">
+                <Divider />
+                <div className="flex flex-wrap gap-3 pt-[19px]">
+                  <Button size="sm" disabled={!open} className="w-[100px]" onClick={() => respond("declined")}>
+                    Decline
+                  </Button>
+                  <Button size="sm" disabled={!open} className="w-[196px]" onClick={() => setSuggesting((v) => !v)}>
+                    Suggest another time
+                  </Button>
+                  <Button variant="primary" size="sm" disabled={!open || Boolean(conflictWith)} className="min-w-[160px] flex-1" onClick={() => respond("approved")}>
+                    Approve request
+                  </Button>
+                </div>
+                {result ? (
+                  <Notice tone="success" className="mt-3">{result}</Notice>
+                ) : (
+                  <p className="mt-[14px] text-[10px] leading-[15px] text-[#afbdcf]">The client will be notified when you respond.</p>
+                )}
+                {result && (
+                  <p className="mt-2 text-[10px] leading-[15px] text-[#afbdcf]">
+                    <Link to="/trainer/schedule" className="font-semibold text-[#8cbaff] hover:text-[#b3d1ff]">View my schedule →</Link>
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="grid flex-1 place-items-center text-center">
+              <div className="animate-fade-up">
+                <p className="text-[19px] font-semibold">All caught up</p>
+                <p className="mt-2 text-xs text-[#afbdcf]">No request is selected. New requests will appear in the list.</p>
+                {result && <Notice tone="success" className="mt-4 max-w-sm">{result}</Notice>}
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
+    </TrainerShell>
+  );
+}
+</file>
+
+<file path="src/pages/Trainer/TrainerSchedulePage.jsx">
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { useTrainerSchedule } from "../../hooks/useTrainerSchedule";
+import { DEMO_TRAINER_ID, DEMO_TRAINER_PROFILE } from "../../data/trainerSchedule";
+import { formatShortDate, formatWeekRange, weekdayLong } from "../../utils/scheduleDates";
+import SectionCard from "../../components/SectionCard";
+import TrainerLayout from "../../components/trainer/TrainerLayout";
+import WeekStrip from "../../components/trainer/WeekStrip";
+import SessionListItem from "../../components/trainer/SessionListItem";
+import SessionDetailPanel from "../../components/trainer/SessionDetailPanel";
+
+export default function TrainerSchedulePage() {
+    const navigate = useNavigate();
+    const auth = useAuth() ?? {};
+
+    // Falls back to the seeded demo trainer until the logged-in user's shape is wired here.
+    const trainer = {
+        ...DEMO_TRAINER_PROFILE,
+        id: auth.user?.id ?? DEMO_TRAINER_ID,
+        fullName: auth.user?.fullName ?? DEMO_TRAINER_PROFILE.fullName,
+    };
+    const logout = () => {
+        (auth.logoutUser ?? auth.logout)?.();
+        navigate("/login");
+    };
+
+    const s = useTrainerSchedule(trainer.id);
+    const todayCount = s.countsByDay[s.today] || 0;
+    const subtitle = "Manage your sessions and record each client's attendance.";
+
+    return (
+        <TrainerLayout activeKey="schedule" pageTitle="My schedule" subtitle={subtitle} trainer={trainer} onLogout={logout}>
+            <div className="flex items-end justify-between gap-4">
+                <div>
+                    <div className="flex items-center gap-2">
+                        <h2 className="font-ui text-lg font-bold">{formatWeekRange(s.weekStart)}</h2>
+                        <button type="button" onClick={s.prevWeek} aria-label="Previous week" className="rounded-full p-1 text-slate-400 hover:bg-white/10 hover:text-white">
+                            <ChevronLeft size={18} />
+                        </button>
+                        <button type="button" onClick={s.nextWeek} aria-label="Next week" className="rounded-full p-1 text-slate-400 hover:bg-white/10 hover:text-white">
+                            <ChevronRight size={18} />
+                        </button>
+                    </div>
+                    <p className="mt-1 font-body text-xs text-slate-400">
+                        {todayCount} {todayCount === 1 ? "session" : "sessions"} today · {formatShortDate(s.today)}
+                    </p>
+                </div>
+                <p className="font-body text-[11px] text-slate-500">All times local</p>
+            </div>
+
+            <WeekStrip days={s.days} selectedIso={s.selectedDate} todayIso={s.today} countsByDay={s.countsByDay} onSelect={s.selectDate} />
+
+            {s.error && (
+                <p role="alert" className="rounded-xl bg-rose-950/60 px-4 py-3 font-body text-sm text-rose-200">
+                    {s.error}
+                </p>
+            )}
+
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+                <SectionCard
+                    title={`${weekdayLong(s.selectedDate)}'s sessions`}
+                    delay={160}
+                    right={
+                        <span className="font-body text-[11px] text-slate-400">
+              {s.summary.completed} completed · {s.summary.remaining} remaining
+            </span>
+                    }
+                >
+                    <div className="flex flex-col gap-3" aria-busy={s.loading}>
+                        {s.loading && <p className="py-8 text-center font-body text-sm text-slate-500">Loading schedule…</p>}
+                        {!s.loading && s.daySessions.length === 0 && (
+                            <p className="py-8 text-center font-body text-sm text-slate-500">No sessions scheduled for this day.</p>
+                        )}
+                        {!s.loading &&
+                            s.daySessions.map((session, i) => (
+                                <SessionListItem
+                                    key={session.id}
+                                    session={session}
+                                    selected={session.id === s.selectedSession?.id}
+                                    onSelect={s.selectSession}
+                                    delay={i * 60}
+                                />
+                            ))}
+                    </div>
+                    <p className="mt-5 font-body text-[11px] text-slate-500">Review the selected session's attendance on the right.</p>
+                </SectionCard>
+
+                <SessionDetailPanel
+                    session={s.selectedSession}
+                    busy={s.busy}
+                    onStart={s.start}
+                    onComplete={s.complete}
+                    onNoShow={s.markNoShow}
+                    onViewProgress={(session) => navigate(`/trainer/members/${session.memberId}/progress`)}
+                />
+            </div>
+        </TrainerLayout>
+    );
+}
+</file>
+
+<file path="src/pages/Trainer/TrainerWorkoutPlans.jsx">
+import { useMemo, useState } from "react";
+import TrainerShell from "../../components/TrainerShell";
+import PlanLibrary from "../../components/trainer/PlanLibrary";
+import PlanEditorFrame from "../../components/trainer/PlanEditorFrame";
+import { Label, SelectInput, TextArea, TextButton, TextInput, cx } from "../../components/trainer/TrainerUI";
+import { saveWorkoutPlan, useTrainerStore, workoutDraftSeed } from "../../data/trainerStore";
+
+// Workout plans  ->  route: /trainer/workout-plans
+// Figma frame "Trainer / Workout plans" (94:51), 1279 x 900.
+
+export const GOALS = ["Muscle gain", "Weight loss", "Strength", "General fitness"];
+const DURATIONS = ["2 weeks", "4 weeks", "6 weeks", "8 weeks", "12 weeks"];
+const FREQUENCIES = ["2 days / week", "3 days / week", "4 days / week", "5 days / week"];
+
+const COLUMNS = "grid grid-cols-[minmax(0,1fr)_66px_66px_72px_66px_24px] items-center gap-x-4";
+const cell = "h-[31px] rounded-[7px] bg-[#17212f] px-[10px] text-[11px] text-[#f8fafc] outline-none transition hover:bg-[#1a2636] focus:ring-2 focus:ring-[#3b82f6]/70";
+
+const blankFromPlan = (plan) => ({
+  ...workoutDraftSeed,
+  planId: plan.id,
+  basedOn: plan.id,
+  name: plan.name,
+  clientId: plan.clientId,
+  duration: plan.duration,
+  attachment: "",
+  notes: "",
+  days: workoutDraftSeed.days.map((day) => ({ ...day, exercises: [] })),
+});
+
+let rowSeq = 0;
+
+export default function TrainerWorkoutPlans() {
+  const { clients, workoutPlans } = useTrainerStore();
+  const [draft, setDraft] = useState(workoutDraftSeed);
+  const [message, setMessage] = useState(null);
+
+  const clientName = (id) => clients.find((c) => c.id === id)?.name ?? "Unassigned";
+  const patch = (changes) => {
+    setMessage(null);
+    setDraft((d) => ({ ...d, ...changes }));
+  };
+
+  const day = draft.days.find((d) => d.id === draft.activeDay) ?? draft.days[0];
+  const setExercises = (exercises) =>
+    patch({ days: draft.days.map((d) => (d.id === day.id ? { ...d, exercises } : d)) });
+  const editRow = (id, key, value) =>
+    setExercises(day.exercises.map((row) => (row.id === id ? { ...row, [key]: value } : row)));
+
+  const library = useMemo(
+    () =>
+      workoutPlans.map((plan) => ({
+        id: plan.id,
+        name: plan.name,
+        subtitle: `${clientName(plan.clientId)} · ${plan.duration}${plan.status === "draft" ? " · Draft" : ""}`,
+        tone: plan.status === "draft" ? "warn" : undefined,
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [workoutPlans, clients],
+  );
+
+  const assigned = workoutPlans.filter((p) => p.status === "assigned").length;
+  const drafts = workoutPlans.filter((p) => p.status === "draft").length + (draft.planId ? 0 : 1);
+  const statusLabel = draft.planId && workoutPlans.find((p) => p.id === draft.planId)?.status === "assigned" ? "ASSIGNED" : "DRAFT";
+
+  const loadPlan = (id) => {
+    const plan = workoutPlans.find((p) => p.id === id);
+    if (!plan) return;
+    setMessage(null);
+    setDraft(plan.data ?? (id === "w1" ? { ...workoutDraftSeed, planId: "w1", name: "Upper body push" } : blankFromPlan(plan)));
+  };
+
+  const startFresh = () => {
+    setMessage(null);
+    setDraft({ ...blankFromPlan({ id: null, name: "", clientId: "", duration: "4 weeks" }), planId: null, basedOn: null });
+  };
+
+  const validate = (forAssign) => {
+    if (!draft.name.trim()) return "Give the plan a name first.";
+    if (forAssign) {
+      if (!draft.clientId) return "Choose a client to assign this plan to.";
+      if (!draft.days.some((d) => d.exercises.some((row) => row.name.trim()))) return "Add at least one exercise before assigning.";
+    }
+    return "";
+  };
+
+  const commit = (status) => {
+    const problem = validate(status === "assigned");
+    if (problem) return setMessage({ tone: "error", text: problem });
+    const id = saveWorkoutPlan(draft, status);
+    setDraft((d) => ({ ...d, planId: id }));
+    setMessage({
+      tone: "success",
+      text:
+        status === "assigned"
+          ? `Assigned to ${clientName(draft.clientId)}. Saved in this browser session only (no backend yet).`
+          : "Draft saved in this browser session only (no backend yet).",
+    });
+  };
+
+  return (
+    <TrainerShell
+      breadcrumb="Workout plans"
+      title="Workout plans"
+      subtitle="Build routines, upload plans, and assign them to your clients."
+    >
+      <div className="grid gap-[18px] lg:grid-cols-[300px_minmax(0,1fr)]">
+        <PlanLibrary
+          title="Workout library"
+          summary={`${assigned} assigned plans · ${drafts} draft`}
+          plans={library}
+          selectedId={draft.planId ?? draft.basedOn}
+          onSelect={loadPlan}
+          fileName={draft.attachment}
+          onFile={(attachment) => patch({ attachment })}
+          footer={
+            <>
+              Reuse a saved plan or{" "}
+              <button type="button" onClick={startFresh} className="font-semibold text-[#8cbaff] underline-offset-2 hover:underline">
+                start fresh
+              </button>
+              .
+            </>
+          }
+        />
+
+        <PlanEditorFrame
+          title="Create workout plan"
+          statusLabel={statusLabel}
+          onSaveDraft={() => commit("draft")}
+          startDate={draft.startDate}
+          onStartDate={(startDate) => patch({ startDate })}
+          assignLabel="Assign workout plan"
+          onAssign={() => commit("assigned")}
+          message={message}
+        >
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_240px]">
+            <div>
+              <Label htmlFor="wp-name">Plan name</Label>
+              <TextInput id="wp-name" value={draft.name} onChange={(e) => patch({ name: e.target.value })} placeholder="e.g. Upper body push" />
+            </div>
+            <div>
+              <Label htmlFor="wp-client">Assign to client</Label>
+              <SelectInput
+                id="wp-client"
+                label="Assign to client"
+                value={draft.clientId}
+                onChange={(clientId) => {
+                  const goal = clients.find((c) => c.id === clientId)?.goal;
+                  patch({ clientId, ...(GOALS.includes(goal) ? { goal } : {}) });
+                }}
+                options={clients.map((c) => ({ value: c.id, label: c.name }))}
+              />
+            </div>
+          </div>
+
+          <div className="mt-[15px] grid gap-4 sm:grid-cols-[214fr_204fr_214fr]">
+            <div>
+              <Label htmlFor="wp-goal">Goal</Label>
+              <SelectInput id="wp-goal" label="Goal" value={draft.goal} onChange={(goal) => patch({ goal })} options={GOALS} />
+            </div>
+            <div>
+              <Label htmlFor="wp-duration">Duration</Label>
+              <SelectInput id="wp-duration" label="Duration" value={draft.duration} onChange={(duration) => patch({ duration })} options={DURATIONS} />
+            </div>
+            <div>
+              <Label htmlFor="wp-frequency">Frequency</Label>
+              <SelectInput id="wp-frequency" label="Frequency" value={draft.frequency} onChange={(frequency) => patch({ frequency })} options={FREQUENCIES} />
+            </div>
+          </div>
+
+          <h3 className="mt-[19px] text-[15px] font-semibold leading-[22px]">Weekly routine</h3>
+          <div role="tablist" aria-label="Weekly routine" className="mt-[10px] grid grid-cols-3 gap-2">
+            {draft.days.map((d) => (
+              <button
+                key={d.id}
+                role="tab"
+                type="button"
+                aria-selected={d.id === day.id}
+                onClick={() => patch({ activeDay: d.id })}
+                className={cx(
+                  "h-9 rounded-[9px] text-xs font-medium transition duration-200 focus-visible:ring-2 focus-visible:ring-[#3b82f6]/70 focus-visible:outline-none",
+                  d.id === day.id ? "bg-[#284b7a] text-[#a8ceff]" : "bg-[#17212f] text-[#afbdcf] hover:bg-[#1b2a3c] hover:text-[#f8fafc]",
+                )}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-[22px] overflow-x-auto">
+            <div className="min-w-[560px]">
+              <div className={cx(COLUMNS, "pb-[10px] text-[10px] font-semibold leading-[15px] text-[#afbdcf]")}>
+                <span>EXERCISE</span>
+                <span>SETS</span>
+                <span>REPS</span>
+                <span>REST</span>
+                <span>LOAD</span>
+                <span />
+              </div>
+              <div key={day.id} role="tabpanel" className="animate-fade-in border-t border-[#374658]">
+                {day.exercises.map((row) => (
+                  <div key={row.id} className={cx(COLUMNS, "h-[49px] border-b border-[#374658]")}>
+                    <input
+                      aria-label="Exercise name"
+                      value={row.name}
+                      onChange={(e) => editRow(row.id, "name", e.target.value)}
+                      placeholder="Exercise name"
+                      className="h-8 w-full min-w-0 rounded-[7px] bg-transparent text-xs font-medium text-[#f8fafc] outline-none transition placeholder:text-[#afbdcf] focus:bg-[#17212f] focus:px-2 focus:ring-2 focus:ring-[#3b82f6]/70"
+                    />
+                    {["sets", "reps", "rest", "load"].map((key) => (
+                      <input key={key} aria-label={key} value={row[key]} onChange={(e) => editRow(row.id, key, e.target.value)} className={cell} />
+                    ))}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${row.name || "exercise"}`}
+                      onClick={() => setExercises(day.exercises.filter((r) => r.id !== row.id))}
+                      className="size-6 rounded text-base leading-none text-[#afbdcf] transition hover:text-[#f4a3b5] focus-visible:ring-2 focus-visible:ring-[#3b82f6]/70 focus-visible:outline-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {day.exercises.length === 0 && (
+                  <p className="border-b border-[#374658] py-[15px] text-xs text-[#afbdcf]">No exercises for this day yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <TextButton
+            className="mt-[14px]"
+            onClick={() => setExercises([...day.exercises, { id: `n${++rowSeq}`, name: "", sets: "3", reps: "10", rest: "60 sec", load: "" }])}
+          >
+            + Add exercise
+          </TextButton>
+
+          <div className="mt-[15px]">
+            <Label htmlFor="wp-notes">Coaching notes</Label>
+            <TextArea id="wp-notes" rows={1} value={draft.notes} onChange={(e) => patch({ notes: e.target.value })} className="h-9" placeholder="Anything the client should keep in mind" />
+          </div>
+        </PlanEditorFrame>
+      </div>
+    </TrainerShell>
+  );
+}
+</file>
+
 <file path="src/pages/TrainerDetails/TrainerDetails.css">
 /* ==========================================================================
    Trainer Details page
@@ -7335,7 +10548,7 @@ export default function TrainerDetails({
 import Hero from "../components/Hero";
 import Navbar from "../components/Navbar";
 import AuthButtons from "../components/AuthButton";
-import Button from "../components/Button";
+import LinkButton from "../components/LinkButton";
 import FeatureStrip from "../components/FeaturStrip";
 import MembershipTiers from "../components/MembershipTier";
 import { features } from "../components/Features";
@@ -7358,9 +10571,9 @@ export default function LandingPage() {
           <p className="mt-5 max-w-sm text-2xl leading-snug md:text-3xl">
             Track your workouts, manage your membership, and reach your fitness goals - all in one place.
           </p>
-          <Button to="/register" size="lg" className="mt-8 md:ml-18">
+          <LinkButton to="/register" size="lg" className="mt-8 md:ml-18">
             Get Started
-          </Button>
+          </LinkButton>
         </div>
       </Hero>
 
@@ -7633,7 +10846,9 @@ export default Login
 
 <file path="src/pages/MemberDash.jsx">
 import { AnimationStyles, Animate } from "../Styles/Animations.jsx";
-import { useNavigate, Navigate, Link } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
+import { House } from "lucide-react";
+import MemberLayout from "../components/MemberLayout";
 import {
     Card,
     CardTitle,
@@ -7643,9 +10858,6 @@ import {
     StatCard,
     WorkoutLogItem,
     UpdateItem,
-    Sidebar,
-    Breadcrumb,
-    ProfilePill,
     LineChart,
     Icon,
     fonts,
@@ -7653,19 +10865,6 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { dashboardService } from "../services/dashboardService";
 import { useDashboard } from "../hooks/useDashboard";
-
-/* ------------------------------------------------------------------ */
-/* Static config (navigation only)                                     */
-/* ------------------------------------------------------------------ */
-const NAV_ITEMS = [
-    { label: "Dashboard", icon: Icon.Home, href: "/member/dashboard", active: true },
-    { label: "Membership", icon: Icon.Sparkle, href: "/member/membership" },
-    { label: "Trainer", icon: Icon.UserCircle, href: "/member/trainer" },
-    { label: "Workout Plan", icon: Icon.Dumbbell, href: "/member/workout-plan" },
-    { label: "Workout Log", icon: Icon.Clipboard, href: "/member/workout-log" },
-    { label: "Progress", icon: Icon.TrendUp, href: "/member/progress" },
-    { label: "Profile", icon: Icon.Gear, href: "/member/profile" },
-];
 
 /* ------------------------------------------------------------------ */
 /* Formatting helpers                                                  */
@@ -7741,16 +10940,10 @@ function Empty({ children }) {
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 function MemberDashboard() {
-    const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const { data, loading, error } = useDashboard(dashboardService.getMemberDashboard, user?.id);
 
     if (!user) return <Navigate to="/login" replace />;
-
-    const handleLogout = () => {
-        logout();
-        navigate("/login", { replace: true });
-    };
 
     if (loading) {
         return (
@@ -7785,41 +10978,9 @@ function MemberDashboard() {
     return (
         <>
             <AnimationStyles />
-
-            <div className="relative min-h-screen w-full overflow-hidden bg-[#090e16] text-white">
-                <img
-                    src="https://www.corehandf.com/cdn/shop/articles/Chiswick-EG-7_1.jpg?v=1782411009"
-                    alt=""
-                    className="anim-bg pointer-events-none absolute left-0 top-0 h-[780px] w-full object-cover opacity-80"
-                />
-                <div className="pointer-events-none absolute left-0 top-0 h-[780px] w-full bg-gradient-to-b from-black/40 via-black/50 to-[#090e16]" />
-
-                <div className="relative z-10 mx-auto flex max-w-[1340px] gap-6 px-4 py-6 sm:px-6">
-                    <Sidebar items={NAV_ITEMS} onLogout={handleLogout} />
-
-                    <main className="min-w-0 flex-1">
-                        {/* ---------- Top bar ---------- */}
-                        <header className="flex flex-wrap items-start justify-between gap-4">
-                            <div>
-                                <Animate type="left" delay={0.1}>
-                                    <Breadcrumb label="Dashboard" />
-                                </Animate>
-                                <Animate
-                                    as="h1"
-                                    type="up"
-                                    delay={0.2}
-                                    className={`${fonts.ui} mt-5 text-3xl font-semibold sm:text-4xl`}
-                                >
-                                    Welcome, <span className="text-[#60a5fa]">{firstName}!</span>
-                                </Animate>
-                            </div>
-                            <Animate type="card">
-                                <ProfilePill name={user?.fullName} />
-                            </Animate>
-                        </header>
-
-                        {/* ---------- Main grid ---------- */}
-                        <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_426px]">
+            {/* Sidebar, top bar, "Welcome" heading and background now come from the shared MemberLayout */}
+            <MemberLayout pageTitle="Dashboard" PageIcon={House} userName={user.fullName} firstName={firstName}>
+                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_426px]">
                             {/* LEFT COLUMN */}
                             <div className="flex flex-col gap-5">
                                 {/* Membership */}
@@ -8063,9 +11224,7 @@ function MemberDashboard() {
                                 </Card>
                             </Animate>
                         </div>
-                    </main>
-                </div>
-            </div>
+            </MemberLayout>
         </>
     );
 }
@@ -8246,6 +11405,88 @@ export async function submitRegistration(payload) {
 export async function submitRegistrationDetails(payload) {
   await new Promise((resolve) => setTimeout(resolve, 1200));
   return { ok: true, simulated: true, referenceNumber: '', received: payload };
+}
+</file>
+
+<file path="src/services/trainerScheduleService.js">
+// Trainer schedule data access.
+//
+// The UI only talks to these four functions. They currently run against an in-memory mock
+// (seeded from data/trainerSchedule.js). To go live, implement the REST branches below
+// (endpoints are suggestions that mirror the TrainingSession model's start() / complete() /
+// markNoShow() methods) and set VITE_USE_MOCK_SCHEDULE=false. No UI changes needed.
+//
+//   GET  /api/trainers/{trainerId}/schedule?weekStart=YYYY-MM-DD  -> TrainerSession[]
+//   POST /api/sessions/{sessionId}/start                          -> TrainerSession
+//   POST /api/sessions/{sessionId}/complete                       -> TrainerSession
+//   POST /api/sessions/{sessionId}/no-show                        -> TrainerSession
+//
+// TrainerSession = {
+//   id, trainerId, memberId, memberName, title, focus,
+//   date: "YYYY-MM-DD", startTime: "HH:mm:ss", durationMinutes,
+//   status: "SCHEDULED" | "UPCOMING" | "STARTED" | "COMPLETED" | "NO_SHOW",
+//   note: string | null
+// }
+
+import { apiFetch } from "./api";
+import { buildSeedWeek } from "../data/trainerSchedule";
+
+const USE_MOCK = import.meta.env.VITE_USE_MOCK_SCHEDULE !== "false";
+const MOCK_LATENCY_MS = 250;
+
+// ---- Mock implementation ---------------------------------------------------------------
+
+const mockWeeks = new Map(); // weekStart -> session[]
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function mockWeek(weekStart, trainerId) {
+    if (!mockWeeks.has(weekStart)) mockWeeks.set(weekStart, buildSeedWeek(weekStart, trainerId));
+    return mockWeeks.get(weekStart);
+}
+
+function mockUpdate(sessionId, changes) {
+    for (const sessions of mockWeeks.values()) {
+        const session = sessions.find((s) => s.id === sessionId);
+        if (session) {
+            Object.assign(session, changes);
+            return { ...session };
+        }
+    }
+    throw new Error(`Session ${sessionId} not found`);
+}
+
+// ---- Public API ------------------------------------------------------------------------
+
+export async function getSchedule(trainerId, weekStart) {
+    if (USE_MOCK) {
+        await wait(MOCK_LATENCY_MS);
+        return mockWeek(weekStart, trainerId).map((s) => ({ ...s }));
+    }
+    return apiFetch(`/api/trainers/${trainerId}/schedule?weekStart=${weekStart}`);
+}
+
+export async function startSession(sessionId) {
+    if (USE_MOCK) {
+        await wait(MOCK_LATENCY_MS);
+        return mockUpdate(sessionId, { status: "STARTED", note: null });
+    }
+    return apiFetch(`/api/sessions/${sessionId}/start`, { method: "POST" });
+}
+
+export async function completeSession(sessionId) {
+    if (USE_MOCK) {
+        await wait(MOCK_LATENCY_MS);
+        return mockUpdate(sessionId, { status: "COMPLETED", note: null });
+    }
+    return apiFetch(`/api/sessions/${sessionId}/complete`, { method: "POST" });
+}
+
+export async function markNoShow(sessionId) {
+    if (USE_MOCK) {
+        await wait(MOCK_LATENCY_MS);
+        return mockUpdate(sessionId, { status: "NO_SHOW", note: null });
+    }
+    return apiFetch(`/api/sessions/${sessionId}/no-show`, { method: "POST" });
 }
 </file>
 
@@ -8609,6 +11850,104 @@ input {
 }
 </file>
 
+<file path="src/utils/scheduleDates.js">
+// Local-time date helpers for the trainer schedule.
+// All dates are "YYYY-MM-DD" strings (same shape the backend's LocalDate serialises to).
+// Deliberately avoids toISOString(), which shifts the day for UTC+ timezones.
+
+const pad = (n) => String(n).padStart(2, "0");
+
+export const formatMediumDate = (iso) =>
+    fromIso(iso).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+
+/** "9:00-10:00 AM" (no duration suffix) */
+export function formatTimeSpan(time, durationMinutes) {
+    const strip = (t) => formatTime(t).replace(/^0/, "");
+    const start = strip(time);
+    const end = strip(endTime(time, durationMinutes));
+    const [sTime, sMer] = start.split(" ");
+    const [, eMer] = end.split(" ");
+    return `${sMer === eMer ? sTime : start}-${end}`;
+}
+
+export const toIso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+export const fromIso = (s) => {
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d);
+};
+
+export const todayIso = () => toIso(new Date());
+
+export const addDays = (iso, n) => {
+    const d = fromIso(iso);
+    d.setDate(d.getDate() + n);
+    return toIso(d);
+};
+
+/** Monday of the week containing `iso`. */
+export const startOfWeek = (iso) => {
+    const d = fromIso(iso);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return toIso(d);
+};
+
+export const weekDays = (weekStartIso) => Array.from({ length: 7 }, (_, i) => addDays(weekStartIso, i));
+
+/** "November 16–22, 2026" (or "November 30 – December 6, 2026" across months). */
+export function formatWeekRange(weekStartIso) {
+    const a = fromIso(weekStartIso);
+    const b = fromIso(addDays(weekStartIso, 6));
+    const month = (d) => d.toLocaleDateString("en-US", { month: "long" });
+    const sameMonth = a.getMonth() === b.getMonth();
+    const range = sameMonth
+        ? `${month(a)} ${a.getDate()}–${b.getDate()}`
+        : `${month(a)} ${a.getDate()} – ${month(b)} ${b.getDate()}`;
+    return `${range}, ${b.getFullYear()}`;
+}
+
+/** "Friday, November 20, 2026" */
+export const formatLongDate = (iso) =>
+    fromIso(iso).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+/** "Fri, Nov 20" */
+export const formatShortDate = (iso) =>
+    fromIso(iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+
+export const weekdayShort = (iso) =>
+    fromIso(iso).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+
+export const weekdayLong = (iso) => fromIso(iso).toLocaleDateString("en-US", { weekday: "long" });
+
+const toMinutes = (time) => {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+};
+
+/** "09:00:00" -> "09:00 AM" */
+export function formatTime(time) {
+    const mins = toMinutes(time) % (24 * 60);
+    const h24 = Math.floor(mins / 60);
+    const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+    return `${pad(h12)}:${pad(mins % 60)} ${h24 < 12 ? "AM" : "PM"}`;
+}
+
+export const endTime = (time, durationMinutes) => {
+    const mins = (toMinutes(time) + durationMinutes) % (24 * 60);
+    return `${pad(Math.floor(mins / 60))}:${pad(mins % 60)}:00`;
+};
+
+/** "9:00–10:00 AM · 60 minutes" */
+export function formatTimeRange(time, durationMinutes) {
+    const strip = (t) => formatTime(t).replace(/^0/, "");
+    const start = strip(time);
+    const end = strip(endTime(time, durationMinutes));
+    const [sTime, sMer] = start.split(" ");
+    const [, eMer] = end.split(" ");
+    return `${sMer === eMer ? sTime : start}–${end} · ${durationMinutes} minutes`;
+}
+</file>
+
 <file path="src/utils/validators.js">
 /**
  * Small, dependency-free validators. Each returns an error message string,
@@ -8916,12 +12255,15 @@ import MemberDashboard from "./pages/MemberDash.jsx";
 import Login from "./pages/Login.jsx";
 import MemberSignup from "./pages/MemberSignup/MemberSignup.jsx";
 import { AuthProvider } from "./context/AuthContext";
+import { MembershipProvider } from "./context/MembershipContext.jsx";
+import RequireAuth from "./components/RequireAuth.jsx";
 import RegistrationDetails from "./pages/RegistrationDetails/RegistrationDetails.jsx";
 import Registration from "./pages/Registration/Registration.jsx";
 import PaymentPage from "./pages/Member/PaymentPage.jsx";
 import ProfilePage from "./pages/Member/ProfilePage.jsx";
 import MembershipPage from "./pages/Member/MembershipPage.jsx";
 import ProgressPage from "./pages/Member/ProgressPage.jsx";
+import TrainerSchedulePage from "./pages/Trainer/TrainerSchedulePage";
 
 const Placeholder = ({ title }) => (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -8940,33 +12282,39 @@ const Placeholder = ({ title }) => (
 export default function App() {
     return (
         <AuthProvider>
-        <BrowserRouter>
-            <Routes>
-                {/* FE 1: Public & Auth */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<MemberSignup/>} />
-                <Route path="/register/details" element={<Registration />} />
-                <Route path="/payment" element={<PaymentPage/>} />
-                <Route path="/member/profile" element={<ProfilePage/>} />
+            <MembershipProvider>
+                <BrowserRouter>
+                    <Routes>
+                        {/* Public */}
+                        <Route path="/" element={<LandingPage />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<MemberSignup />} />
+                        <Route path="/register/details" element={<Registration />} />
 
-                {/* FE 2: Member Workspace */}
-                <Route path="/member/dashboard" element={<MemberDashboard />} />
-                <Route path="/member/membership" element={<MembershipPage />} />
-                <Route path="/member/workout-plan" element={<WorkoutPlanPage />} />
-                <Route path="/member/workout-log" element={<WorkoutLogPage />} />
-                <Route path="/member/trainer" element={<Placeholder title="My Trainer" />} />
-                <Route path="/member/progress" element={<ProgressPage />} />
+                        {/* Member pages: need a logged-in user */}
+                        <Route element={<RequireAuth />}>
+                            <Route path="/payment" element={<PaymentPage />} />
+                            <Route path="/member/dashboard" element={<MemberDashboard />} />
+                            <Route path="/member/membership" element={<MembershipPage />} />
+                            <Route path="/member/workout-plan" element={<WorkoutPlanPage />} />
+                            <Route path="/member/workout-log" element={<WorkoutLogPage />} />
+                            <Route path="/member/trainer" element={<Placeholder title="My Trainer" />} />
+                            <Route path="/member/progress" element={<ProgressPage />} />
+                            <Route path="/member/progress/started" element={<ProgressPage status="started" />} />
+                            <Route path="/member/progress/no-show" element={<ProgressPage status="no-show" />} />
+                            <Route path="/member/profile" element={<ProfilePage />} />
+                        </Route>
 
-                    {/* FE 3: Trainer Workspace */}
-                    <Route path="/trainer/dashboard" element={<Placeholder title="Trainer Dashboard" />} />
-                    <Route path="/trainer/workout-plans" element={<Placeholder title="Trainer Workout Plans" />} />
-                    <Route path="/trainer/diet-plans" element={<Placeholder title="Trainer Diet Plans" />} />
-                    <Route path="/trainer/rescheduling" element={<Placeholder title="Rescheduling Requests" />} />
-                    <Route path="/trainer/body-metrics" element={<Placeholder title="Body Metrics" />} />
-                    <Route path="/trainer/schedule" element={<Placeholder title="My Schedule" />} />
-                </Routes>
-            </BrowserRouter>
+                        {/* Trainer workspace (placeholders for now) */}
+                        <Route path="/trainer/dashboard" element={<Placeholder title="Trainer Dashboard" />} />
+                        <Route path="/trainer/workout-plans" element={<Placeholder title="Trainer Workout Plans" />} />
+                        <Route path="/trainer/diet-plans" element={<Placeholder title="Trainer Diet Plans" />} />
+                        <Route path="/trainer/rescheduling" element={<Placeholder title="Rescheduling Requests" />} />
+                        <Route path="/trainer/body-metrics" element={<Placeholder title="Body Metrics" />} />
+                        <Route path="/trainer/schedule" element={<TrainerSchedulePage/>} />
+                    </Routes>
+                </BrowserRouter>
+            </MembershipProvider>
         </AuthProvider>
     );
 }
@@ -9196,7 +12544,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
 })
 </file>
 

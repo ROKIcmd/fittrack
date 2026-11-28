@@ -2,7 +2,7 @@ import { CalendarClock, CalendarDays, Dumbbell, House, LogOut, TrendingUp, Utens
 import { Logo, ProfilePill, SidebarNavItem } from "../MemberDashComp";
 
 export const TRAINER_NAV = [
-    { key: "dashboard", label: "Dashboard", href: "/trainer", icon: House },
+    { key: "dashboard", label: "Dashboard", href: "/trainer/dashboard", icon: House },
     { key: "workout-plans", label: "Workout plans", href: "/trainer/workout-plans", icon: Dumbbell },
     { key: "diet-plans", label: "Diet plans", href: "/trainer/diet-plans", icon: Utensils },
     { key: "rescheduling", label: "Rescheduling", href: "/trainer/rescheduling", icon: CalendarClock },
@@ -10,10 +10,6 @@ export const TRAINER_NAV = [
 ];
 const SCHEDULE_NAV = { key: "schedule", label: "My schedule", href: "/trainer/schedule", icon: CalendarDays };
 
-/**
- * Shell for every trainer page: sidebar, hero header (breadcrumb, title, profile pill), content.
- * Counterpart of MemberLayout. Reuses the member sidebar pieces (Logo, SidebarNavItem, ProfilePill).
- */
 export default function TrainerLayout({
                                           activeKey,
                                           pageTitle,
